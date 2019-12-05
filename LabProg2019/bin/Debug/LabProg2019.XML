@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<doc>
+<assembly><name>LabProg2019</name></assembly>
+<members>
+<member name="T:LabProg2019.Prelude.Color">
+<summary>
+ Application-wide type alias for ConsoleColor.
+</summary>
+</member>
+<member name="M:LabProg2019.Prelude.synced`1.apply_and_set(Microsoft.FSharp.Core.FSharpFunc{`0,`0})">
+<summary>
+ Apply the given function f to the synchronized value and modify it atomically.
+</summary>
+</member>
+<member name="M:LabProg2019.Prelude.synced`1.apply``1(Microsoft.FSharp.Core.FSharpFunc{`0,``0})">
+<summary>
+ Apply the given function f to the synchronized value atomically.
+</summary>
+</member>
+<member name="T:LabProg2019.Prelude.synced`1">
+<summary>
+ Access a shared value in a thread-safe synchronized way.
+</summary>
+</member>
+<member name="M:LabProg2019.Prelude.ConsoleColor.of_rgb.Static(System.Byte,System.Byte,System.Byte)">
+<summary>
+ Calculates the nearest ConsoleColor to the given RGB triple.
+</summary>
+</member>
+<member name="M:LabProg2019.Prelude.ConsoleColor.shade_by_brightness(System.ConsoleColor,System.Int32)">
+<summary>
+ Calculate a pair of Colors (foreground, backgroud) given a reference color and an integer representing the brightness in the range [0, 3].
+</summary>
+</member>
+<member name="M:LabProg2019.Prelude.ConsoleColor.get_darken(System.ConsoleColor)">
+<summary>
+ Computes the dark version of a given Color.
+</summary>
+</member>
+<member name="M:LabProg2019.Prelude.deg2rad(System.Double)">
+<summary>
+ Convert an angle a in degrees into radians.
+</summary>
+</member>
+<member name="T:LabProg2019.Globals.remote_logger">
+<summary>
+ Type specialization for the log server.
+</summary>
+</member>
+<member name="M:LabProg2019.Globals.logger.atomic_print(System.ConsoleColor,System.String)">
+<summary>
+ Internal low-level atomic print primitive.
+</summary>
+</member>
+<member name="T:LabProg2019.Globals.logger">
+<summary>
+ Logger type.
+</summary>
+</member>
+<member name="M:LabProg2019.Globals.rnd_color">
+<summary>
+ Generate a random ConsoleColor among the available system palette.
+</summary>
+</member>
+<member name="M:LabProg2019.Globals.rnd_bool">
+<summary>
+ Generate a random boolean.
+</summary>
+</member>
+<member name="M:LabProg2019.Globals.rnd_float(System.Double,System.Double)">
+<summary>
+ Generate a random float within the range [a, b].
+</summary>
+</member>
+<member name="M:LabProg2019.Globals.rnd_int(System.Int32,System.Int32)">
+<summary>
+ Generate a random integer within the range [a, b].
+</summary>
+</member>
+<member name="P:LabProg2019.Globals.Rnd">
+<summary>
+ Global PRNG instance.
+</summary>
+</member>
+<member name="P:LabProg2019.Globals.Log">
+<summary>
+ Global logger instance.    
+</summary>
+</member>
+<member name="M:LabProg2019.Gfx.raster.unsafe_blit(System.Int32,System.Int32,System.Int32,System.Int32,LabProg2019.Gfx.wronly_raster,System.Int32,System.Int32)">
+<summary>
+ Blit a rectangular region of pixels from this object as source to the destination raster.
+ Expression src.unsafe_blit (x0, y0, w, h, dst, x1, y1) blits from source raster src to destination raster dst,
+ copying the rectangular region with top-left corner at (x0, y0) and bottom-right corner at (x0 + w - 1, y0 + h -1) to destination coordinates (x1, y1).
+</summary>
+</member>
+<member name="M:LabProg2019.Gfx.raster.get(System.Int32,System.Int32)">
+<summary>
+ Reads a pixel value at the given coordinates.
+</summary>
+</member>
+<member name="M:LabProg2019.Gfx.clamp(System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32)">
+<summary>
+ Calculates the intersection between the two given rectangles.
+</summary>
+</member>
+</members>
+</doc>

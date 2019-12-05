@@ -1,0 +1,37 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29020.237
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "LabProg2019", "LabProg2019\LabProg2019.fsproj", "{548D015D-A8AB-4CFA-9E1B-0C6602EFBE92}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Debug|x86 = Debug|x86
+		Release|Any CPU = Release|Any CPU
+		Release|x86 = Release|x86
+		Test|Any CPU = Test|Any CPU
+		Test|x86 = Test|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{548D015D-A8AB-4CFA-9E1B-0C6602EFBE92}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{548D015D-A8AB-4CFA-9E1B-0C6602EFBE92}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{548D015D-A8AB-4CFA-9E1B-0C6602EFBE92}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{548D015D-A8AB-4CFA-9E1B-0C6602EFBE92}.Debug|x86.Build.0 = Debug|Any CPU
+		{548D015D-A8AB-4CFA-9E1B-0C6602EFBE92}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{548D015D-A8AB-4CFA-9E1B-0C6602EFBE92}.Release|Any CPU.Build.0 = Release|Any CPU
+		{548D015D-A8AB-4CFA-9E1B-0C6602EFBE92}.Release|x86.ActiveCfg = Release|Any CPU
+		{548D015D-A8AB-4CFA-9E1B-0C6602EFBE92}.Release|x86.Build.0 = Release|Any CPU
+		{548D015D-A8AB-4CFA-9E1B-0C6602EFBE92}.Test|Any CPU.ActiveCfg = Test|Any CPU
+		{548D015D-A8AB-4CFA-9E1B-0C6602EFBE92}.Test|Any CPU.Build.0 = Test|Any CPU
+		{548D015D-A8AB-4CFA-9E1B-0C6602EFBE92}.Test|x86.ActiveCfg = Test|Any CPU
+		{548D015D-A8AB-4CFA-9E1B-0C6602EFBE92}.Test|x86.Build.0 = Test|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {85E616F7-4E2B-4D1B-8955-192E03F0FD35}
+	EndGlobalSection
+EndGlobal
