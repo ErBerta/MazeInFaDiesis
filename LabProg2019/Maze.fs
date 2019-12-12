@@ -32,7 +32,7 @@ type Maze = {
 
 let W = 60
 let H = 30
-
+(*
 let main () =       
     let engine = new engine (W, H)
 
@@ -75,7 +75,7 @@ let main () =
     // start engine
     engine.loop_on_key my_update st0
 
-
+    *)
 //COPIATO 
 //Maze.initMaze 50 50 |> Maze.generate |> Maze.show |> Maze.render
 
@@ -91,21 +91,42 @@ let initMaze dx dy =
         Height = dy
     }
 
+let show maze =
+    //printfn "%A" maze   // stampa della struttura dati
+    Console.Clear ()
+    maze.Grid |> Array2D.iteri //scorrimento della matrice e stampa del labirinto ~ implementare con libreria grafica
+        (fun y x cell ->
+            if x = 0 && y > 0 then 
+                printfn "|"
+            let c = 
+                match cell with
+                | Muro -> Config.empty_pixel_char
+                | Passaggio -> Config.wall_pixel_char
+            printf "%c" c
+        )
+    System.Threading.Thread.Sleep 5
+    maze
+
 let generate (maze : Maze) : Maze =
     let isLegal (x,y) =
+        //show maze |> ignore
         x>0 && x < maze.Width-1 && y>0 && y<maze.Height-1
     
     let frontier (x,y) =
+        //show maze |> ignore
         [x-2,y;x+2,y; x,y-2; x, y+2]
         |> List.filter (fun (x,y) -> isLegal (x,y) && maze.Grid.[x,y] = Muro)
+
     
     let neighbor (x,y) =
+        //show maze |> ignore
         [x-2,y;x+2,y; x,y-2; x, y+2]
         |> List.filter (fun (x,y) -> isLegal (x,y) && maze.Grid.[x,y] = Passaggio)
     
     let randomCell () = rng.Next(maze.Width),rng.Next(maze.Height)
 
     let removeAt index (lst : (int * int) list) : (int * int) list =
+        //show maze |> ignore
         let x,y = lst.[index]
         lst |> List.filter (fun (a,b) -> not (a = x && b = y) )
     
@@ -125,6 +146,7 @@ let generate (maze : Maze) : Maze =
         (x,y)
     
     let connectRandomNeighbor (x,y) =
+        show maze |> ignore
         let neighbors = neighbor (x,y)
         let pickedIndex = rng.Next(neighbors.Length)
         let xn,yn = neighbors.[pickedIndex]
@@ -133,6 +155,7 @@ let generate (maze : Maze) : Maze =
         ()
     
     let rec extend front =
+        show maze |> ignore
         match front with
         | [] -> ()
         | _ ->
@@ -145,22 +168,10 @@ let generate (maze : Maze) : Maze =
     let x,y = randomCell()
     maze.Grid.[x,y] <- Passaggio
     extend (frontier (x,y))
-
+    
     maze
 
-let show maze =
-    printfn "%A" maze
-    maze.Grid |> Array2D.iteri 
-        (fun y x cell ->
-            if x = 0 && y > 0 then 
-                printfn "|"
-            let c = 
-                match cell with
-                | Muro -> Config.wall_pixel_char
-                | Passaggio -> Config.empty_pixel_char
-            printf "%c" c
-        )
-    maze
+
 
 let render maze =
     let cellWidth = 10;

@@ -9,7 +9,6 @@ module LabProg2019.Engine
 open System
 open Gfx
 open Globals
-open System.Diagnostics
 open System.Threading
 
 // buffer type hierarchy
@@ -31,15 +30,18 @@ type private image_buffer (con, num) =
     override __.ToString () = sprintf "image_buffer#%d" num
 
 
-    
-// engine type
+// engine
 //
 
-// update function signature
-type 'st update_type = ConsoleKeyInfo option -> wronly_raster -> 'st -> 'st * bool
+type private 'st loop_data = { frame_cnt : int; elapsed : TimeSpan; now : DateTime; state : 'st; quit : bool }
 
-type 'st loop_data = { frame_cnt : int; elapsed : TimeSpan; now : DateTime; state : 'st; quit : bool }
-
+/// This class provides the 2D ASCII engine.
+/// Constructors picks width and height of the output console and optionally the frame-rate cap and the flip queue length.
+/// A flip queue length of 0 implies no buffering and direct rendering on the system console.
+/// The system console windows is automatically created when this class gets instantiated.
+/// Calling one of the loop methods make the engine start its render loop.
+/// Sprites can be registered for making the engine draw them each frame automatically in ascending z-order.
+/// The order of operations for each frame are: clear buffer; render sprites; call user update function; commit frame; switch buffer.
 type engine (w : int, h : int, ?fps_cap : int, ?flip_queue) =
     let fps_cap = defaultArg fps_cap Config.default_fps_cap
     let flip_queue = defaultArg flip_queue Config.default_flip_queue
@@ -53,20 +55,28 @@ type engine (w : int, h : int, ?fps_cap : int, ?flip_queue) =
         assert (flip_queue >= 0)
         Log.msg "initializing engine:\n\twidth=%d height=%d fps=%d\n\tbuffers=%d type=%s" w h fps_cap flip_queue (buffers.[0].GetType().Name)
         
+    /// Get the width of the output console.
     member val screen_width = w
+    /// Get the height of the output console.
     member val screen_height = h 
 
+    /// Register the given sprite so that the engine knows it and renders it each frame according to its z value.
     member __.register_sprite (spr : sprite) =
         let len = lock sprites <| fun () ->
             sprites <- List.sortBy (fun spr -> spr.z) (spr :: sprites)  // sprites are always sorted in ascending order by z
             List.length sprites
         Log.msg "registered sprite #%d: x=%g y=%g z=%d width=%d height=%d" len spr.x spr.y spr.z spr.width spr.height
 
+    /// Shortcut for creating and registering a sprite in one operation with a given image.
     member this.create_and_register_sprite (img, x, y, z) = let r = new sprite (img, x, y, z) in this.register_sprite r; r
+    /// Shortcut for creating and registering a sprite in one operation with an empty image.
     member this.create_and_register_sprite (w, h, x, y, z) = this.create_and_register_sprite (new image (w, h), x, y, z)
 
-    member val auto_clear = true
-    member val show_sprites = true
+    /// Flag for enabling/disabling automatic clearing of each frame (default = true).
+    member val auto_clear = true with get, set
+    /// Flag for enabling/disabling automatic rendering of sprites at each frame (default = true).
+    member val show_sprites = true with get, set
+    /// Flag for enabling/disabling fps and frame time information overlay (default = true in Debug and false in Release).
     member val show_fps = 
         #if DEBUG
         true
@@ -79,7 +89,6 @@ type engine (w : int, h : int, ?fps_cap : int, ?flip_queue) =
         let buff = buffers.[data.frame_cnt % Array.length buffers]
         let (st', quit'), ts = stopwatch_quiet <| fun () ->
             buff.lock_and_commit <| fun wr ->
-                //Log.debug "locked buffer %O (frame_cnt = %d)" buff data.frame_cnt
                 if this.auto_clear then wr.clear
                 let st', quit' = update wr data.state
                 if this.show_sprites then lock sprites <| fun () -> for spr in sprites do spr.draw wr
@@ -90,6 +99,10 @@ type engine (w : int, h : int, ?fps_cap : int, ?flip_queue) =
                 st', quit'
         { data with state = st'; frame_cnt = data.frame_cnt + 1; quit = quit'; elapsed = ts }
 
+
+    /// Start the engine loop given a custom update function and an initial state.
+    /// The update function is called every time a key is pressed on the system console; the key is passed as argument to the update function, together with the output wronly_raster and the state.
+    /// Each call to the update function produces a boolean and a new state: the latter is passed to the subsequent call; the former tells the engine whether to quit or not the big loop.
     member this.loop_on_key update st0 =
         Log.msg "entering engine on-key loop..."
         let mutable data = { state = st0; frame_cnt = 0; quit = false; elapsed = new TimeSpan (); now = DateTime.Now }
@@ -98,7 +111,12 @@ type engine (w : int, h : int, ?fps_cap : int, ?flip_queue) =
             let k = Console.ReadKey true
             Log.debug "engine: key pressed: %c" k.KeyChar
             data <- this.shoot (update k) data
+        Log.msg "exiting engine loop-on-key."
 
+    /// Start the engine loop given a custom update function and an initial state.
+    /// The update function is called every I milliseconds, where I = 1000 / fps_cap, on a different thread, allowing advanced concurrent rendering strategies.
+    /// A key may either have or not have been pressed, therefore a value of type 'ConsoleKeyInfo option' is passed to the update function, together with the output wronly_raster and the state.
+    /// Each call to the update function produces a boolean and a new state: the latter is passed to the subsequent call; the former tells the engine whether to quit or not the big loop.
     member this.loop update st0 =
         let interval = 1000. / float fps_cap
         Log.msg "entering engine loop: timer interval=%g ms" interval

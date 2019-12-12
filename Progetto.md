@@ -135,3 +135,20 @@ let render maze =
 
 initMaze 50 50 |> generate |> show |> render
 ```
+
+## Consigli 12/12/'19
+
+* Per la ricerca del percorso
+  * Utilizzare BFS o DFS per la ricerca del percorso inizio - fine
+
+* Plagio
+  * Accettano lo scambio di idee ed eventualmente soluzioni comuni
+  * L'implementazione dev'essere diversa (Il codice non dev'essere la stessa identica)
+    * In sintesi, basta non fare copia e incolla. Ed eventualmente modificare della roba
+
+* Idee
+  * Disegna la strada effettuata
+  * La versione non iterativa deve mostrare il percorso da fare
+    * Algoritmo ricorsivo:
+      * BFS
+      * DFS

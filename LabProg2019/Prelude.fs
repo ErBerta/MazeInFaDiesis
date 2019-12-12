@@ -9,6 +9,8 @@ module LabProg2019.Prelude
 
 open System
 open Printf
+open System.Drawing
+
 
 /// Convert an angle a in degrees into radians.
 let deg2rad a = a * Math.PI / 180. 
@@ -21,8 +23,12 @@ type synced<'a> (v_ : 'a) =
     /// Apply the given function f to the synchronized value and modify it atomically.
     member this.apply_and_set f = this.apply <| fun x -> v <- f x
 
-// ConsoleColor type augmentations
-//
+/// Calculates the intersection between the two given rectangluar regions.
+let clamp (x0, y0, w0, h0) (x1, y1, w1, h1) =
+    let r1 = new Rectangle (x0, y0, w0, h0)
+    let r2 = new Rectangle (x1, y1, w1, h1)
+    r1.Intersect r2
+    r1.Left, r1.Top, r1.Width, r1.Height
 
 type ConsoleColor with
     /// Computes the dark version of a given Color.
@@ -39,11 +45,10 @@ type ConsoleColor with
         let fg, bg =
             match n with
                 | 0 -> darkcol, ConsoleColor.Black // darkest
-                | 1 -> col, ConsoleColor.Black     
+                | 1 -> col, ConsoleColor.Black
                 | 2 -> col, darkcol
                 | 3 -> darkcol, col
                 | _ -> ConsoleColor.White, darkcol  
-    //                | _ -> C.White, col   // white on bright color is barely visible
         in
             fg, if fg = bg then ConsoleColor.Gray else bg
 
@@ -62,7 +67,7 @@ type ConsoleColor with
         in
             R Double.MaxValue (new ConsoleColor ()) (Enum.GetValues typeof<ConsoleColor> |> Seq.cast |> Seq.toList)
 
-    // Convert a 4-bit nibble in the system console format to a ConsoleColor.
+    /// Convert a 4-bit nibble in the system console format to a ConsoleColor.
     static member color_of_nibble n =
         match n &&& 0x000fs with
         | 0b0000s -> ConsoleColor.Black
@@ -83,7 +88,7 @@ type ConsoleColor with
         | 0b1111s -> ConsoleColor.White
         | x -> failwithf "unexpected color bit string: %x" x
 
-    // Convert a ConsoleColor to a 4-bit nibble in the system console format.
+    /// Convert a ConsoleColor to a 4-bit nibble in the system console format.
     static member nibble_of_color col =
         match col with
         | ConsoleColor.Black -> 0b0000s 
@@ -104,6 +109,6 @@ type ConsoleColor with
         | ConsoleColor.White -> 0b1111s 
         | x -> failwithf "unexpected color: %O" x
 
-/// Application-wide type alias for ConsoleColor.
+/// Type alias for ConsoleColor.
 type Color = ConsoleColor
     
