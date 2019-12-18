@@ -32,24 +32,10 @@ type Maze = {
     Height : int
 }
 
-//let W = 60
-//let H = 30
-(*
-let main () =       
-    let engine = new engine (W, H)
+let W = 30
+let H = 30
 
-    let my_update (key : ConsoleKeyInfo) (screen : wronly_raster) (st : state) =
-        // move player
-        let dx, dy =
-            match key.KeyChar with 
-            | 'w' -> 0., -1.
-            | 's' -> 0., 1.
-            | 'a' -> -1., 0.
-            | 'd' -> 1., 0.
-            | _   -> 0., 0.
-        // TODO: check bounds
-        st.player.move_by (dx, dy)
-        st, key.KeyChar = 'q'
+
 
     let maz (grid: Maze): pixel[] = 
         let pixelarray = [||](*grid.Width*grid.Height*)
@@ -76,8 +62,8 @@ let main () =
         }
     // start engine
     engine.loop_on_key my_update st0
-    *)
-    
+
+
 //COPIATO 
 //Maze.initMaze 50 50 |> Maze.generate |> Maze.show |> Maze.render
 //CONTROLLA CHE IL PIXEL CASUALE NON FINISCA SUL BORDO
@@ -201,4 +187,55 @@ let render maze =
             g.FillRectangle(brush,x*cellWidth,y*cellHeight,cellWidth,cellHeight)
         )
     g.Flush()
+(*
+[< NoEquality; NoComparison>]
+type state ={
+    player: sprite
+}*)
 
+let main () =       
+    let engine = new engine (W, H)
+
+    let my_update (key : ConsoleKeyInfo) (screen : wronly_raster) (st : state) =
+        // move player
+        let dx, dy =
+            match key.KeyChar with 
+            | 'w' -> 0., -1.
+            | 's' -> 0., 1.
+            | 'a' -> -1., 0.
+            | 'd' -> 1., 0.
+            | _   -> 0., 0.
+        // TODO: check bounds
+        st.player.move_by (dx, dy)
+        st, key.KeyChar = 'q'
+
+    let maz (grid: Maze): pixel[] = 
+        let pixelarray = Array.zeroCreate ((grid.Height)*(grid.Width)) 
+        printf "\n\n%A\n" pixelarray.Length
+        grid.Grid |> Array2D.iteri 
+            (fun y x cell ->
+                let c = 
+                    match cell with
+                    | Muro -> pixel.wall
+                    | Passaggio -> pixel.path
+                //printf "%A %A %A\n" x y W
+                if x<>W || y<>H then 
+                    pixelarray.[y*W+x] <- c
+                //pixelarray
+            )
+        pixelarray
+    // create simple backgroud and player
+    let mazing = generate (initMaze W H) 
+
+    //ignore <| 
+    let labirinto = engine.create_and_register_sprite (new image (W,H,(maz mazing)), 0, 0, 0)
+    //let player = engine.create_and_register_sprite (image.circle (2, pixel.filled Color.White, pixel.filled Color.Gray), W / 2, H / 2, 1)
+    
+    //engine.
+
+    // initialize state
+    let st0 = { 
+        player = labirinto
+        }
+    //start engine
+    engine.loop_on_key my_update st0
