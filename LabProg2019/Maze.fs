@@ -32,37 +32,8 @@ type Maze = {
     Height : int
 }
 
-let W = 30
-let H = 30
-
-
-
-    let maz (grid: Maze): pixel[] = 
-        let pixelarray = [||](*grid.Width*grid.Height*)
-        grid.Grid |> Array2D.iteri 
-            (fun y x cell ->
-                let c = 
-                    match cell with
-                    | Muro -> pixel.wall
-                    | Passaggio -> pixel.path
-                Array.append pixelarray [|c|]
-                //pixelarray
-            )
-        pixelarray
-    // create simple backgroud and player
-    let mazing = Maze.initMaze W H |> Maze.generate
-
-    ignore <| engine.create_and_register_sprite ((image W H (maz mazing)) (W, H, pixel.filled Color.Yellow, pixel.filled Color.Blue), 0, 0, 0)
-    //let player = engine.create_and_register_sprite (image.circle (2, pixel.filled Color.White, pixel.filled Color.Gray), W / 2, H / 2, 1)
-
-
-    // initialize state
-    let st0 = { 
-        player = player
-        }
-    // start engine
-    engine.loop_on_key my_update st0
-
+let W = 51
+let H = 51
 
 //COPIATO 
 //Maze.initMaze 50 50 |> Maze.generate |> Maze.show |> Maze.render
@@ -228,14 +199,18 @@ let main () =
     let mazing = generate (initMaze W H) 
 
     //ignore <| 
-    let labirinto = engine.create_and_register_sprite (new image (W,H,(maz mazing)), 0, 0, 0)
+    ignore <| engine.create_and_register_sprite (new image (W,H,(maz mazing)), 0, 0, 0)
+    let pixGiocatore = pixel.create(Config.wall_pixel_char, Color.Red)
+    let pixArrivo = pixel.create(Config.wall_pixel_char, Color.Blue)
+    let giocatore = engine.create_and_register_sprite (image.rectangle (2, 1, pixGiocatore), 1, 1, 2)
+    let arrivo = engine.create_and_register_sprite (image.rectangle (2, 1, pixArrivo), W-3, H-2, 2)
     //let player = engine.create_and_register_sprite (image.circle (2, pixel.filled Color.White, pixel.filled Color.Gray), W / 2, H / 2, 1)
     
     //engine.
 
     // initialize state
     let st0 = { 
-        player = labirinto
+        player = giocatore
         }
     //start engine
     engine.loop_on_key my_update st0
