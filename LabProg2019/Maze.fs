@@ -32,8 +32,9 @@ type Maze = {
     Height : int
 }
 
-let W = 51
-let H = 51
+let W = 31
+let H = 31
+
 
 //COPIATO 
 //Maze.initMaze 50 50 |> Maze.generate |> Maze.show |> Maze.render
@@ -165,7 +166,7 @@ type state ={
 }*)
 
 let main () =       
-    let engine = new engine (W, H)
+    let engine = new engine (2*W, H)
 
     let my_update (key : ConsoleKeyInfo) (screen : wronly_raster) (st : state) =
         // move player
@@ -181,8 +182,8 @@ let main () =
         st, key.KeyChar = 'q'
 
     let maz (grid: Maze): pixel[] = 
-        let pixelarray = Array.zeroCreate ((grid.Height)*(grid.Width)) 
-        printf "\n\n%A\n" pixelarray.Length
+        let pixelarray = Array.zeroCreate ((grid.Height)*(grid.Width)*2) 
+        //printf "\n\n%A\n" pixelarray.Length
         grid.Grid |> Array2D.iteri 
             (fun y x cell ->
                 let c = 
@@ -191,7 +192,9 @@ let main () =
                     | Passaggio -> pixel.path
                 //printf "%A %A %A\n" x y W
                 if x<>W || y<>H then 
-                    pixelarray.[y*W+x] <- c
+                    let pos = y*W+x
+                    pixelarray.[2*pos] <- c
+                    pixelarray.[2*pos+1] <- c
                 //pixelarray
             )
         pixelarray
