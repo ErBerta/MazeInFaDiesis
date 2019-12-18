@@ -9,7 +9,7 @@ module LabProg2019.Config
 open Prelude
 
 let filled_pixel_char = '*'
-let wall_pixel_char = '|'
+let wall_pixel_char = '█'
 let empty_pixel_char = ' '
 
 let default_flip_queue = 2  // double buffering

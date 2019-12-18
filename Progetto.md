@@ -152,3 +152,5 @@ initMaze 50 50 |> generate |> show |> render
     * Algoritmo ricorsivo:
       * BFS
       * DFS
+
+* Si programma in inglese. Sti cazzi

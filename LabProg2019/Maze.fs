@@ -12,6 +12,8 @@ open Engine
 open Gfx
 open System.Text
 
+let stampa = false
+
 type CharInfo with
     static member wall = pixel.create (Config.wall_pixel_char, Color.White)
     static member internal path = pixel.filled Color.Black
@@ -30,8 +32,8 @@ type Maze = {
     Height : int
 }
 
-let W = 60
-let H = 30
+//let W = 60
+//let H = 30
 (*
 let main () =       
     let engine = new engine (W, H)
@@ -74,11 +76,11 @@ let main () =
         }
     // start engine
     engine.loop_on_key my_update st0
-
     *)
+    
 //COPIATO 
 //Maze.initMaze 50 50 |> Maze.generate |> Maze.show |> Maze.render
-
+//CONTROLLA CHE IL PIXEL CASUALE NON FINISCA SUL BORDO
 
 let initMaze dx dy = 
     let six,siy = (1,1)
@@ -100,11 +102,10 @@ let show maze =
                 printfn "|"
             let c = 
                 match cell with
-                | Muro -> Config.empty_pixel_char
-                | Passaggio -> Config.wall_pixel_char
+                | Muro -> Config.wall_pixel_char
+                | Passaggio -> Config.empty_pixel_char
             printf "%c" c
         )
-    System.Threading.Thread.Sleep 5
     maze
 
 let generate (maze : Maze) : Maze =
@@ -146,7 +147,7 @@ let generate (maze : Maze) : Maze =
         (x,y)
     
     let connectRandomNeighbor (x,y) =
-        show maze |> ignore
+        if stampa then show maze |> ignore
         let neighbors = neighbor (x,y)
         let pickedIndex = rng.Next(neighbors.Length)
         let xn,yn = neighbors.[pickedIndex]
@@ -155,7 +156,7 @@ let generate (maze : Maze) : Maze =
         ()
     
     let rec extend front =
-        show maze |> ignore
+        if stampa then show maze |> ignore
         match front with
         | [] -> ()
         | _ ->
@@ -165,7 +166,15 @@ let generate (maze : Maze) : Maze =
             connectRandomNeighbor (xf,yf)
             extend ((front |> removeAt pickedIndex) @ frontier (xf,yf))
 
-    let x,y = randomCell()
+    let rec test (x,y) =
+        let maxx = maze.Width
+        let maxy = maze.Height
+        match x,y with
+        | 0,_ -> test (randomCell())
+        | _,0 -> test (randomCell())
+        | x,y -> if x%2=0 || y%2=0 || x=maxx || y=maxy then test (randomCell()) else x,y
+
+    let x,y = test (randomCell())
     maze.Grid.[x,y] <- Passaggio
     extend (frontier (x,y))
     
