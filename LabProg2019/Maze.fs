@@ -32,36 +32,8 @@ type Maze = {
     Height : int
 }
 
-let W = 30
-let H = 30
-
-
-
-    let maz (grid: Maze): pixel[] = 
-        let pixelarray = [||](*grid.Width*grid.Height*)
-        grid.Grid |> Array2D.iteri 
-            (fun y x cell ->
-                let c = 
-                    match cell with
-                    | Muro -> pixel.wall
-                    | Passaggio -> pixel.path
-                Array.append pixelarray [|c|]
-                //pixelarray
-            )
-        pixelarray
-    // create simple backgroud and player
-    let mazing = Maze.initMaze W H |> Maze.generate
-
-    ignore <| engine.create_and_register_sprite ((image W H (maz mazing)) (W, H, pixel.filled Color.Yellow, pixel.filled Color.Blue), 0, 0, 0)
-    //let player = engine.create_and_register_sprite (image.circle (2, pixel.filled Color.White, pixel.filled Color.Gray), W / 2, H / 2, 1)
-
-
-    // initialize state
-    let st0 = { 
-        player = player
-        }
-    // start engine
-    engine.loop_on_key my_update st0
+let W = 31
+let H = 31
 
 
 //COPIATO 
@@ -194,7 +166,7 @@ type state ={
 }*)
 
 let main () =       
-    let engine = new engine (W, H)
+    let engine = new engine (2*W, H)
 
     let my_update (key : ConsoleKeyInfo) (screen : wronly_raster) (st : state) =
         // move player
@@ -210,8 +182,8 @@ let main () =
         st, key.KeyChar = 'q'
 
     let maz (grid: Maze): pixel[] = 
-        let pixelarray = Array.zeroCreate ((grid.Height)*(grid.Width)) 
-        printf "\n\n%A\n" pixelarray.Length
+        let pixelarray = Array.zeroCreate ((grid.Height)*(grid.Width)*2) 
+        //printf "\n\n%A\n" pixelarray.Length
         grid.Grid |> Array2D.iteri 
             (fun y x cell ->
                 let c = 
@@ -220,7 +192,9 @@ let main () =
                     | Passaggio -> pixel.path
                 //printf "%A %A %A\n" x y W
                 if x<>W || y<>H then 
-                    pixelarray.[y*W+x] <- c
+                    let pos = y*W+x
+                    pixelarray.[2*pos] <- c
+                    pixelarray.[2*pos+1] <- c
                 //pixelarray
             )
         pixelarray
@@ -228,7 +202,7 @@ let main () =
     let mazing = generate (initMaze W H) 
 
     //ignore <| 
-    let labirinto = engine.create_and_register_sprite (new image (W,H,(maz mazing)), 0, 0, 0)
+    let labirinto = engine.create_and_register_sprite (new image (2*W,H,(maz mazing)), 0, 0, 0)
     //let player = engine.create_and_register_sprite (image.circle (2, pixel.filled Color.White, pixel.filled Color.Gray), W / 2, H / 2, 1)
     
     //engine.
