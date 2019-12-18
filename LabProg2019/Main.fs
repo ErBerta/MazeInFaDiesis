@@ -33,9 +33,9 @@ let main_game () =
     //Maze.initMaze 50 50 |> Maze.generate |> Maze.show |> Maze.render
     Maze.main ()
     
-    
-        
     0
+        
+    
 
 // log mode (server)
 //
