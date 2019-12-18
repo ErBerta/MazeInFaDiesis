@@ -79,7 +79,7 @@ type engine (w : int, h : int, ?fps_cap : int, ?flip_queue) =
     /// Flag for enabling/disabling fps and frame time information overlay (default = true in Debug and false in Release).
     member val show_fps = 
         #if DEBUG
-        true
+        false
         #else
         false
         #endif

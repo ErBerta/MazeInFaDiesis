@@ -32,8 +32,8 @@ type Maze = {
     Height : int
 }
 
-let W = 31
-let H = 31
+let W = 51
+let H = 51
 
 
 //COPIATO 
@@ -73,14 +73,12 @@ let generate (maze : Maze) : Maze =
     
     let frontier (x,y) =
         //show maze |> ignore
-        [x-2,y;x+2,y; x,y-2; x, y+2]
-        |> List.filter (fun (x,y) -> isLegal (x,y) && maze.Grid.[x,y] = Muro)
+        [x-2,y;x+2,y; x,y-2; x, y+2] |> List.filter (fun (x,y) -> isLegal (x,y) && maze.Grid.[x,y] = Muro)
 
     
     let neighbor (x,y) =
         //show maze |> ignore
-        [x-2,y;x+2,y; x,y-2; x, y+2]
-        |> List.filter (fun (x,y) -> isLegal (x,y) && maze.Grid.[x,y] = Passaggio)
+        [x-2,y;x+2,y; x,y-2; x, y+2] |> List.filter (fun (x,y) -> isLegal (x,y) && maze.Grid.[x,y] = Passaggio)
     
     let randomCell () = rng.Next(maze.Width),rng.Next(maze.Height)
 
@@ -167,15 +165,20 @@ type state ={
 
 let main () =       
     let engine = new engine (2*W, H)
+    let mazing = generate (initMaze W H) 
+
+    
 
     let my_update (key : ConsoleKeyInfo) (screen : wronly_raster) (st : state) =
+        let isWall (x,y) =
+            if mazing.Grid.[int (st.player.x / 2. + x), int (st.player.y + y)] = Passaggio then 2.*x,y else 0.,0.
         // move player
         let dx, dy =
             match key.KeyChar with 
-            | 'w' -> 0., -1.
-            | 's' -> 0., 1.
-            | 'a' -> -1., 0.
-            | 'd' -> 1., 0.
+            | 'w' -> isWall(0.,-1.)
+            | 's' -> isWall(0., 1.)
+            | 'a' -> isWall(-1., 0.)
+            | 'd' -> isWall(1., 0.)
             | _   -> 0., 0.
         // TODO: check bounds
         st.player.move_by (dx, dy)
@@ -192,21 +195,21 @@ let main () =
                     | Passaggio -> pixel.path
                 //printf "%A %A %A\n" x y W
                 if x<>W || y<>H then 
-                    let pos = y*W+x
+                    let pos = x*W+y
                     pixelarray.[2*pos] <- c
                     pixelarray.[2*pos+1] <- c
                 //pixelarray
             )
         pixelarray
     // create simple backgroud and player
-    let mazing = generate (initMaze W H) 
+    
 
     //ignore <| 
-    ignore <| engine.create_and_register_sprite (new image (W,H,(maz mazing)), 0, 0, 0)
+    ignore <| engine.create_and_register_sprite (new image (W*2,H,(maz mazing)), 0, 0, 0)
     let pixGiocatore = pixel.create(Config.wall_pixel_char, Color.Red)
     let pixArrivo = pixel.create(Config.wall_pixel_char, Color.Blue)
-    let giocatore = engine.create_and_register_sprite (image.rectangle (2, 1, pixGiocatore), 1, 1, 2)
-    let arrivo = engine.create_and_register_sprite (image.rectangle (2, 1, pixArrivo), W-3, H-2, 2)
+    let giocatore = engine.create_and_register_sprite (image.rectangle (2, 1, pixGiocatore), 2, 1, 2)
+    let arrivo = engine.create_and_register_sprite (image.rectangle (2, 1, pixArrivo), W*2-4, H-2, 2)
     //let player = engine.create_and_register_sprite (image.circle (2, pixel.filled Color.White, pixel.filled Color.Gray), W / 2, H / 2, 1)
     
     //engine.
