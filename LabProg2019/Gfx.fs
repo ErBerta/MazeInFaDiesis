@@ -293,7 +293,6 @@ type image (w, h, pixels : pixel[]) =
         Option.iter (fun px -> i.flood_fill (i.width / 2, i.height / 2, px)) filled_px
         i
 
-
 /// Subclass of image representing sprites. Sprites are images that can have a location and can be moved.
 /// Constructor parameters are the image, coordinates x, y and an integer z that is the order by which sprites are rendered, in ascending order (lower z means more behind, higher z means more in front).
 /// Coordinates x and y are stored as floats, allowing fine precision movement of sprites.

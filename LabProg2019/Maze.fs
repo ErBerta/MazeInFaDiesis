@@ -34,7 +34,8 @@ type Maze = {
 
 let W = 51
 let H = 51
-
+let finex = W*2-4
+let finey = H-2
 
 //COPIATO 
 //Maze.initMaze 50 50 |> Maze.generate |> Maze.show |> Maze.render
@@ -162,13 +163,18 @@ let render maze =
 type state ={
     player: sprite
 }*)
-
 let main () =       
     let engine = new engine (2*W, H)
     let mazing = generate (initMaze W H) 
 
-    
-
+    let exit () = 
+        let rect= image.rectangle (11, 5, pixel.filled Color.Yellow, pixel.filled Color.Blue)
+        rect.draw_text("Vinto",3, 2, Color.Red, Color.Blue)
+        ignore <| engine.create_and_register_sprite (rect, W-5, H/2, 2)
+        //let a = new image (W/2, 1)
+        
+        //ignore <| engine.create_and_register_sprite (a, W/4, H/4, 4)
+        
     let my_update (key : ConsoleKeyInfo) (screen : wronly_raster) (st : state) =
         let isWall (x,y) =
             if mazing.Grid.[int (st.player.x / 2. + x), int (st.player.y + y)] = Passaggio then 2.*x,y else 0.,0.
@@ -179,10 +185,17 @@ let main () =
             | 's' -> isWall(0., 1.)
             | 'a' -> isWall(-1., 0.)
             | 'd' -> isWall(1., 0.)
+            | 'q' -> confirm //conferma di uscita
             | _   -> 0., 0.
         // TODO: check bounds
+        //controllo se è arrivato
         st.player.move_by (dx, dy)
-        st, key.KeyChar = 'q'
+        if st.player.x+dx = float finex && st.player.y+dy = float finey then 
+            st.player.clear 
+            exit ()
+            st, true
+        else
+            st, key.KeyChar = 'q'
 
     let maz (grid: Maze): pixel[] = 
         let pixelarray = Array.zeroCreate ((grid.Height)*(grid.Width)*2) 
@@ -205,11 +218,11 @@ let main () =
     
 
     //ignore <| 
-    ignore <| engine.create_and_register_sprite (new image (W*2,H,(maz mazing)), 0, 0, 0)
+    let labirinto = engine.create_and_register_sprite (new image (W*2,H,(maz mazing)), 0, 0, 0)
     let pixGiocatore = pixel.create(Config.wall_pixel_char, Color.Red)
     let pixArrivo = pixel.create(Config.wall_pixel_char, Color.Blue)
     let giocatore = engine.create_and_register_sprite (image.rectangle (2, 1, pixGiocatore), 2, 1, 2)
-    let arrivo = engine.create_and_register_sprite (image.rectangle (2, 1, pixArrivo), W*2-4, H-2, 2)
+    let arrivo = engine.create_and_register_sprite (image.rectangle (2, 1, pixArrivo), finex, finey, 2)
     //let player = engine.create_and_register_sprite (image.circle (2, pixel.filled Color.White, pixel.filled Color.Gray), W / 2, H / 2, 1)
     
     //engine.
@@ -220,3 +233,4 @@ let main () =
         }
     //start engine
     engine.loop_on_key my_update st0
+
