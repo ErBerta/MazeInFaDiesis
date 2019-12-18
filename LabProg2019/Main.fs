@@ -30,7 +30,7 @@ let main_game () =
     Log <- new remote_logger (client)
 
     // TODO: call your main here
-    Maze.initMaze 91 91 |> Maze.generate |> Maze.show |> Maze.render
+    Maze.initMaze 51 51 |> Maze.generate |> Maze.show |> Maze.render
     //Maze.main ()
     
     
