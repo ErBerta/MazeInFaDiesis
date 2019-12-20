@@ -26,3 +26,5 @@ let log_msg_color = Color.Gray
 let log_warn_color = Color.Yellow
 let log_error_color = Color.Red
 let log_debug_color = Color.Cyan
+
+type GameMod = | Auto | Player

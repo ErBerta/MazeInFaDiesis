@@ -31,7 +31,7 @@ let main_game () =
 
     // TODO: call your main here
     //Maze.initMaze 51 51 |> Maze.generate |> Maze.show |> Maze.render
-    Maze.main ()
+    Maze.main (Config.GameMod.Auto)
     
     0
         

@@ -158,14 +158,22 @@ let render maze =
             g.FillRectangle(brush,x*cellWidth,y*cellHeight,cellWidth,cellHeight)
         )
     g.Flush()
+
+(*let rec dfs player x y=
+    
+
+let startResolver player=
+    dfs player 0 0*)
+
 (*
 [< NoEquality; NoComparison>]
 type state ={
     player: sprite
 }*)
-let main () =       
+let main (gm: Config.GameMod) =
     let engine = new engine (2*W, H)
     let mazing = generate (initMaze W H) 
+
 
     let exit () = 
         let rect= image.rectangle (11, 5, pixel.filled Color.Yellow, pixel.filled Color.Blue)
@@ -185,7 +193,6 @@ let main () =
             | 's' -> isWall(0., 1.)
             | 'a' -> isWall(-1., 0.)
             | 'd' -> isWall(1., 0.)
-            | 'q' -> confirm //conferma di uscita
             | _   -> 0., 0.
         // TODO: check bounds
         //controllo se è arrivato
@@ -193,7 +200,7 @@ let main () =
         if st.player.x+dx = float finex && st.player.y+dy = float finey then 
             st.player.clear 
             exit ()
-            st, true
+            st, false
         else
             st, key.KeyChar = 'q'
 
@@ -233,4 +240,6 @@ let main () =
         }
     //start engine
     engine.loop_on_key my_update st0
+    (*if gm = Config.GameMod.Auto
+        startResolver player*)
 
