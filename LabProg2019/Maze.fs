@@ -23,6 +23,8 @@ type CharInfo with
 [< NoEquality; NoComparison >]
 type state = {
     player : sprite
+    lab : sprite
+    arrived : sprite
 }
 let rng = new System.Random()
 type Cell = | Muro | Passaggio
@@ -36,10 +38,6 @@ let W = 51
 let H = 51
 let finex = W*2-4
 let finey = H-2
-
-//COPIATO 
-//Maze.initMaze 50 50 |> Maze.generate |> Maze.show |> Maze.render
-//CONTROLLA CHE IL PIXEL CASUALE NON FINISCA SUL BORDO
 
 let initMaze dx dy = 
     let six,siy = (1,1)
@@ -74,7 +72,7 @@ let generate (maze : Maze) : Maze =
     
     let frontier (x,y) =
         //show maze |> ignore
-        [x-2,y;x+2,y; x,y-2; x, y+2] |> List.filter (fun (x,y) -> isLegal (x,y) && maze.Grid.[x,y] = Muro)
+        [x-2,y; x+2,y; x,y-2; x,y+2] |> List.filter (fun (x,y) -> isLegal (x,y) && maze.Grid.[x,y] = Muro)
 
     
     let neighbor (x,y) =
@@ -159,11 +157,11 @@ let render maze =
         )
     g.Flush()
 
-(*let rec dfs player x y=
+let rec dfs player x y= 0
     
 
-let startResolver player=
-    dfs player 0 0*)
+let startResolver st =
+    dfs st 0 0
 
 (*
 [< NoEquality; NoComparison>]
@@ -199,6 +197,8 @@ let main (gm: Config.GameMod) =
         st.player.move_by (dx, dy)
         if st.player.x+dx = float finex && st.player.y+dy = float finey then 
             st.player.clear 
+            st.lab.clear
+            st.arrived.clear
             exit ()
             st, false
         else
@@ -237,9 +237,12 @@ let main (gm: Config.GameMod) =
     // initialize state
     let st0 = { 
         player = giocatore
-        }
+        lab = labirinto
+        arrived = arrivo
+    }
     //start engine
     engine.loop_on_key my_update st0
-    (*if gm = Config.GameMod.Auto
-        startResolver player*)
 
+    if gm = Config.GameMod.Auto 
+    then
+        ignore <| startResolver st0
