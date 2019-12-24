@@ -12,8 +12,6 @@ open Engine
 open Gfx
 open System.Text
 
-let stampa = false
-
 type CharInfo with
     static member wall = pixel.create (Config.wall_pixel_char, Color.White)
     static member internal path = pixel.filled Color.Black
@@ -49,21 +47,6 @@ let initMaze dx dy =
         Width = dx
         Height = dy
     }
-
-let show maze =
-    //printfn "%A" maze   // stampa della struttura dati
-    Console.Clear ()
-    maze.Grid |> Array2D.iteri //scorrimento della matrice e stampa del labirinto ~ implementare con libreria grafica
-        (fun y x cell ->
-            if x = 0 && y > 0 then 
-                printfn "|"
-            let c = 
-                match cell with
-                | Muro -> Config.wall_pixel_char
-                | Passaggio -> Config.empty_pixel_char
-            printf "%c" c
-        )
-    maze
 
 let generate (maze : Maze) : Maze =
     let isLegal (x,y) =
@@ -102,7 +85,6 @@ let generate (maze : Maze) : Maze =
         (x,y)
     
     let connectRandomNeighbor (x,y) =
-        if stampa then show maze |> ignore
         let neighbors = neighbor (x,y)
         let pickedIndex = rng.Next(neighbors.Length)
         let xn,yn = neighbors.[pickedIndex]
@@ -111,7 +93,6 @@ let generate (maze : Maze) : Maze =
         ()
     
     let rec extend front =
-        if stampa then show maze |> ignore
         match front with
         | [] -> ()
         | _ ->
@@ -135,39 +116,13 @@ let generate (maze : Maze) : Maze =
     
     maze
 
-
-
-let render maze =
-    let cellWidth = 10;
-    let cellHeight = 10;
-    let pw = maze.Width * cellWidth
-    let ph = maze.Height * cellHeight
-    let passageBrush = System.Drawing.Brushes.White
-    let wallBrush = System.Drawing.Brushes.Black
-    let bmp = new System.Drawing.Bitmap(pw,ph)
-    let g = System.Drawing.Graphics.FromImage(bmp);
-    maze.Grid
-    |> Array2D.iteri 
-        (fun y x cell ->
-            let brush = 
-                match cell with
-                | Passaggio -> passageBrush
-                | Muro -> wallBrush
-            g.FillRectangle(brush,x*cellWidth,y*cellHeight,cellWidth,cellHeight)
-        )
-    g.Flush()
-
 let rec dfs player x y= 0
     
 
 let startResolver st =
     dfs st 0 0
 
-(*
-[< NoEquality; NoComparison>]
-type state ={
-    player: sprite
-}*)
+
 let main (gm: Config.GameMod) =
     let engine = new engine (2*W, H)
     let mazing = generate (initMaze W H) 
@@ -175,7 +130,7 @@ let main (gm: Config.GameMod) =
 
     let exit () = 
         let rect= image.rectangle (11, 5, pixel.filled Color.Yellow, pixel.filled Color.Blue)
-        rect.draw_text("Vinto",3, 2, Color.Red, Color.Blue)
+        rect.draw_text("Vinto",3, 2, Color.Red, Color.Yellow)
         ignore <| engine.create_and_register_sprite (rect, W-5, H/2, 2)
         //let a = new image (W/2, 1)
         
@@ -206,24 +161,20 @@ let main (gm: Config.GameMod) =
 
     let maz (grid: Maze): pixel[] = 
         let pixelarray = Array.zeroCreate ((grid.Height)*(grid.Width)*2) 
-        //printf "\n\n%A\n" pixelarray.Length
         grid.Grid |> Array2D.iteri 
             (fun y x cell ->
                 let c = 
                     match cell with
                     | Muro -> pixel.wall
                     | Passaggio -> pixel.path
-                //printf "%A %A %A\n" x y W
                 if x<>W || y<>H then 
                     let pos = x*W+y
                     pixelarray.[2*pos] <- c
                     pixelarray.[2*pos+1] <- c
-                //pixelarray
             )
         pixelarray
     // create simple backgroud and player
-    
-
+  
     //ignore <| 
     let labirinto = engine.create_and_register_sprite (new image (W*2,H,(maz mazing)), 0, 0, 0)
     let pixGiocatore = pixel.create(Config.wall_pixel_char, Color.Red)
@@ -231,18 +182,20 @@ let main (gm: Config.GameMod) =
     let giocatore = engine.create_and_register_sprite (image.rectangle (2, 1, pixGiocatore), 2, 1, 2)
     let arrivo = engine.create_and_register_sprite (image.rectangle (2, 1, pixArrivo), finex, finey, 2)
     //let player = engine.create_and_register_sprite (image.circle (2, pixel.filled Color.White, pixel.filled Color.Gray), W / 2, H / 2, 1)
-    
-    //engine.
 
     // initialize state
-    let st0 = { 
+    let st1 = { 
         player = giocatore
         lab = labirinto
         arrived = arrivo
     }
+    
+    
+    
     //start engine
-    engine.loop_on_key my_update st0
+    engine.loop_on_key my_update st1
 
     if gm = Config.GameMod.Auto 
     then
-        ignore <| startResolver st0
+        ignore <| startResolver st1
+

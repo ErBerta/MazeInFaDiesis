@@ -71,6 +71,7 @@
     <Compile Include="Engine.fs" />
     <Compile Include="Maze.fs" />
     <Compile Include="Test.fs" />
+    <Compile Include="Menu.fs" />
     <Compile Include="Main.fs" />
     <None Include="App.config" />
     <Content Include="packages.config" />

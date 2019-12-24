@@ -27,4 +27,4 @@ let log_warn_color = Color.Yellow
 let log_error_color = Color.Red
 let log_debug_color = Color.Cyan
 
-type GameMod = | Auto | Player
+type GameMod = | Auto | Player | Exit | Game2
