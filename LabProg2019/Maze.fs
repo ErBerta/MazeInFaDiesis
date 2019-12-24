@@ -50,20 +50,6 @@ let initMaze dx dy =
         Height = dy
     }
 
-let show maze =
-    //printfn "%A" maze   // stampa della struttura dati
-    Console.Clear ()
-    maze.Grid |> Array2D.iteri //scorrimento della matrice e stampa del labirinto ~ implementare con libreria grafica
-        (fun y x cell ->
-            if x = 0 && y > 0 then 
-                printfn "|"
-            let c = 
-                match cell with
-                | Muro -> Config.wall_pixel_char
-                | Passaggio -> Config.empty_pixel_char
-            printf "%c" c
-        )
-    maze
 
 let generate (maze : Maze) : Maze =
     let isLegal (x,y) =
@@ -102,7 +88,6 @@ let generate (maze : Maze) : Maze =
         (x,y)
     
     let connectRandomNeighbor (x,y) =
-        if stampa then show maze |> ignore
         let neighbors = neighbor (x,y)
         let pickedIndex = rng.Next(neighbors.Length)
         let xn,yn = neighbors.[pickedIndex]
@@ -111,7 +96,6 @@ let generate (maze : Maze) : Maze =
         ()
     
     let rec extend front =
-        if stampa then show maze |> ignore
         match front with
         | [] -> ()
         | _ ->
@@ -135,33 +119,73 @@ let generate (maze : Maze) : Maze =
     
     maze
 
+let mazing = generate(initMaze W H)
+
+let my_update (key : ConsoleKeyInfo) (screen : wronly_raster) (st : state) =
+    let isWall (x,y) =
+        if mazing.Grid.[int (st.player.x / 2. + x), int (st.player.y + y)] = Passaggio then 2.*x,y else 0.,0.
+    // move player
+    let dx, dy =
+        match key.KeyChar with 
+        | 'w' -> isWall(0.,-1.)
+        | 's' -> isWall(0., 1.)
+        | 'a' -> isWall(-1., 0.)
+        | 'd' -> isWall(1., 0.)
+        | _   -> 0., 0.
+    // TODO: check bounds
+    //controllo se è arrivato
+    st.player.move_by (dx, dy)
+    if st.player.x+dx = float finex && st.player.y+dy = float finey then 
+        st.player.clear 
+        st.lab.clear
+        st.arrived.clear
+        exit 0
+        st, false
+    else
+        st, key.KeyChar = 'q'
 
 
-let render maze =
-    let cellWidth = 10;
-    let cellHeight = 10;
-    let pw = maze.Width * cellWidth
-    let ph = maze.Height * cellHeight
-    let passageBrush = System.Drawing.Brushes.White
-    let wallBrush = System.Drawing.Brushes.Black
-    let bmp = new System.Drawing.Bitmap(pw,ph)
-    let g = System.Drawing.Graphics.FromImage(bmp);
-    maze.Grid
-    |> Array2D.iteri 
-        (fun y x cell ->
-            let brush = 
-                match cell with
-                | Passaggio -> passageBrush
-                | Muro -> wallBrush
-            g.FillRectangle(brush,x*cellWidth,y*cellHeight,cellWidth,cellHeight)
-        )
-    g.Flush()
+type Direction = | LEFT | RIGHT | UP | DOWN
 
-let rec dfs player x y= 0
+
+
+let trymove (stat:state) (direction:Direction) (screen : wronly_raster) =
+    let dx= stat.player.x
+    let dy= stat.player.y
+    let st, ret =
+        match direction with
+        | Direction.LEFT ->  my_update (new ConsoleKeyInfo ('a', new ConsoleKey(),false, false, false )) screen stat
+        | Direction.RIGHT ->  my_update (new ConsoleKeyInfo('d', new ConsoleKey(),false, false, false )) screen stat
+        | Direction.UP ->  my_update (new ConsoleKeyInfo('w', new ConsoleKey(),false, false, false )) screen stat
+        | Direction.DOWN ->  my_update (new ConsoleKeyInfo('s', new ConsoleKey(),false, false, false )) screen stat
+
+    if stat.player.x = dx || stat.player.y = dy then
+        (false, st, ret)
+    else 
+        (true, st, ret)
+
+let rec dfs sta screen x y= 
+    let (up, stu, ret) =trymove sta Direction.UP screen
+    if up then
+        dfs stu screen x y
+    let (down, std, ret) = trymove sta Direction.DOWN screen
+    if down  then
+        dfs std screen x y
+    let (left, stl, ret) = trymove sta Direction.LEFT screen
+    if  left then
+        dfs stl screen x y
+    let (right, str, ret) = trymove sta Direction.RIGHT screen
+    if right then
+        dfs str screen x y
+    
     
 
-let startResolver st =
-    dfs st 0 0
+let startResolver st screen =
+    dfs st screen 0 0
+
+let auto_start (key : ConsoleKeyInfo) (screen : wronly_raster) (st : state)= 
+    startResolver st screen
+    st, false
 
 (*
 [< NoEquality; NoComparison>]
@@ -170,7 +194,7 @@ type state ={
 }*)
 let main (gm: Config.GameMod) =
     let engine = new engine (2*W, H)
-    let mazing = generate (initMaze W H) 
+    //mazing = generate (initMaze W H) 
 
 
     let exit () = 
@@ -181,28 +205,7 @@ let main (gm: Config.GameMod) =
         
         //ignore <| engine.create_and_register_sprite (a, W/4, H/4, 4)
         
-    let my_update (key : ConsoleKeyInfo) (screen : wronly_raster) (st : state) =
-        let isWall (x,y) =
-            if mazing.Grid.[int (st.player.x / 2. + x), int (st.player.y + y)] = Passaggio then 2.*x,y else 0.,0.
-        // move player
-        let dx, dy =
-            match key.KeyChar with 
-            | 'w' -> isWall(0.,-1.)
-            | 's' -> isWall(0., 1.)
-            | 'a' -> isWall(-1., 0.)
-            | 'd' -> isWall(1., 0.)
-            | _   -> 0., 0.
-        // TODO: check bounds
-        //controllo se è arrivato
-        st.player.move_by (dx, dy)
-        if st.player.x+dx = float finex && st.player.y+dy = float finey then 
-            st.player.clear 
-            st.lab.clear
-            st.arrived.clear
-            exit ()
-            st, false
-        else
-            st, key.KeyChar = 'q'
+    
 
     let maz (grid: Maze): pixel[] = 
         let pixelarray = Array.zeroCreate ((grid.Height)*(grid.Width)*2) 
@@ -241,8 +244,10 @@ let main (gm: Config.GameMod) =
         arrived = arrivo
     }
     //start engine
-    engine.loop_on_key my_update st0
+    
 
     if gm = Config.GameMod.Auto 
     then
-        ignore <| startResolver st0
+        engine.loop_on_key auto_start st0 
+    else
+        engine.loop_on_key my_update st0
