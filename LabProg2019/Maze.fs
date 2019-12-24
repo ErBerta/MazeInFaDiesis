@@ -12,8 +12,6 @@ open Engine
 open Gfx
 open System.Text
 
-let stampa = false
-
 type CharInfo with
     static member wall = pixel.create (Config.wall_pixel_char, Color.White)
     static member internal path = pixel.filled Color.Black
@@ -187,11 +185,7 @@ let auto_start (key : ConsoleKeyInfo) (screen : wronly_raster) (st : state)=
     startResolver st screen
     st, false
 
-(*
-[< NoEquality; NoComparison>]
-type state ={
-    player: sprite
-}*)
+
 let main (gm: Config.GameMod) =
     let engine = new engine (2*W, H)
     //mazing = generate (initMaze W H) 
@@ -199,7 +193,7 @@ let main (gm: Config.GameMod) =
 
     let exit () = 
         let rect= image.rectangle (11, 5, pixel.filled Color.Yellow, pixel.filled Color.Blue)
-        rect.draw_text("Vinto",3, 2, Color.Red, Color.Blue)
+        rect.draw_text("Vinto",3, 2, Color.Red, Color.Yellow)
         ignore <| engine.create_and_register_sprite (rect, W-5, H/2, 2)
         //let a = new image (W/2, 1)
         
@@ -209,24 +203,20 @@ let main (gm: Config.GameMod) =
 
     let maz (grid: Maze): pixel[] = 
         let pixelarray = Array.zeroCreate ((grid.Height)*(grid.Width)*2) 
-        //printf "\n\n%A\n" pixelarray.Length
         grid.Grid |> Array2D.iteri 
             (fun y x cell ->
                 let c = 
                     match cell with
                     | Muro -> pixel.wall
                     | Passaggio -> pixel.path
-                //printf "%A %A %A\n" x y W
                 if x<>W || y<>H then 
                     let pos = x*W+y
                     pixelarray.[2*pos] <- c
                     pixelarray.[2*pos+1] <- c
-                //pixelarray
             )
         pixelarray
     // create simple backgroud and player
-    
-
+  
     //ignore <| 
     let labirinto = engine.create_and_register_sprite (new image (W*2,H,(maz mazing)), 0, 0, 0)
     let pixGiocatore = pixel.create(Config.wall_pixel_char, Color.Red)
@@ -234,8 +224,6 @@ let main (gm: Config.GameMod) =
     let giocatore = engine.create_and_register_sprite (image.rectangle (2, 1, pixGiocatore), 2, 1, 2)
     let arrivo = engine.create_and_register_sprite (image.rectangle (2, 1, pixArrivo), finex, finey, 2)
     //let player = engine.create_and_register_sprite (image.circle (2, pixel.filled Color.White, pixel.filled Color.Gray), W / 2, H / 2, 1)
-    
-    //engine.
 
     // initialize state
     let st0 = { 
@@ -243,6 +231,9 @@ let main (gm: Config.GameMod) =
         lab = labirinto
         arrived = arrivo
     }
+    
+    
+    
     //start engine
     
 

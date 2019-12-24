@@ -40,7 +40,6 @@ G:\GitHub\MazeInFaDiesis\LabProg2019\bin\Debug\ru\FSharp.Core.resources.dll
 G:\GitHub\MazeInFaDiesis\LabProg2019\bin\Debug\tr\FSharp.Core.resources.dll
 G:\GitHub\MazeInFaDiesis\LabProg2019\bin\Debug\zh-Hans\FSharp.Core.resources.dll
 G:\GitHub\MazeInFaDiesis\LabProg2019\bin\Debug\zh-Hant\FSharp.Core.resources.dll
-G:\GitHub\MazeInFaDiesis\LabProg2019\obj\Debug\LabProg2019.fsprojAssemblyReference.cache
 G:\GitHub\MazeInFaDiesis\LabProg2019\obj\Debug\LabProg2019.fsproj.CopyComplete
 G:\GitHub\MazeInFaDiesis\LabProg2019\obj\Debug\LabProg2019.exe
 G:\GitHub\MazeInFaDiesis\LabProg2019\obj\Debug\LabProg2019.pdb

@@ -15,7 +15,8 @@ open System.IO
 
 // game mode (client)
 //
-  
+let mutable gameMod = Config.GameMod.Exit
+
 let main_game () =
     use p = new Process ()
     p.StartInfo.UseShellExecute <- true
@@ -28,10 +29,10 @@ let main_game () =
     use client = new NamedPipeClientStream (".", Config.log_pipe_name, PipeDirection.Out)
     client.Connect ()
     Log <- new remote_logger (client)
+    
+    Menu.main (100,100)
 
-    // TODO: call your main here
-    //Maze.initMaze 51 51 |> Maze.generate |> Maze.show |> Maze.render
-    Maze.main (Config.GameMod.Auto)
+    //Maze.main (Config.GameMod.Player)
     
     0
         
