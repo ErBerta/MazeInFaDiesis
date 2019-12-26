@@ -10,6 +10,8 @@ open Engine
 open Gfx
 open System.Text
 
+let mutable gameMod = Config.GameMod.Exit
+
 [< NoEquality; NoComparison >]
 type state = {
     menuscelta : sprite
@@ -32,13 +34,16 @@ let main (W,H) =
         //controllo se è arrivato
         ignore <| st.menuscelta.move_by (dx, dy)
         
+         
         if key.KeyChar = 'p' then
-            match (st.menuscelta.y - 1.) with
-            | 1. -> Main.gameMod <| Config.GameMod.Player
-            | 2. -> Main.gameMod <| Config.GameMod.Auto
-            | 3. -> Main.gameMod <| Config.GameMod.Game2
-            | 4. -> Main.gameMod <| Config.GameMod.Player
-            | _ -> failwith "errore"
+            gameMod <-
+                match (st.menuscelta.y - 1.) with
+                    | 1. ->  Config.GameMod.Player
+                    | 2. ->  Config.GameMod.Auto
+                    | 3. ->  Config.GameMod.Game2
+                    | 4. ->  Config.GameMod.Player
+                    | _ -> Config.GameMod.Exit
+            Maze.main (gameMod)
         
         st, key.KeyChar = 'q'
 

@@ -15,7 +15,7 @@ open System.IO
 
 // game mode (client)
 //
-let mutable gameMod = Config.GameMod.Exit
+
 
 let main_game () =
     use p = new Process ()

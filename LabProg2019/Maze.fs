@@ -11,6 +11,7 @@ open External
 open Engine
 open Gfx
 open System.Text
+open  System.Threading
 
 type CharInfo with
     static member wall = pixel.create (Config.wall_pixel_char, Color.White)
@@ -143,7 +144,7 @@ let my_update (key : ConsoleKeyInfo) (screen : wronly_raster) (st : state) =
         st, key.KeyChar = 'q'
 
 
-type Direction = | LEFT | RIGHT | UP | DOWN
+type Direction = | LEFT | RIGHT | UP | DOWN | NULL
 
 
 
@@ -156,30 +157,57 @@ let trymove (stat:state) (direction:Direction) (screen : wronly_raster) =
         | Direction.RIGHT ->  my_update (new ConsoleKeyInfo('d', new ConsoleKey(),false, false, false )) screen stat
         | Direction.UP ->  my_update (new ConsoleKeyInfo('w', new ConsoleKey(),false, false, false )) screen stat
         | Direction.DOWN ->  my_update (new ConsoleKeyInfo('s', new ConsoleKey(),false, false, false )) screen stat
+        | Direction.NULL -> (stat, false)
 
-    if stat.player.x = dx || stat.player.y = dy then
+    if stat.player.x = dx && stat.player.y = dy then
         (false, st, ret)
     else 
         (true, st, ret)
 
-let rec dfs sta screen x y= 
-    let (up, stu, ret) =trymove sta Direction.UP screen
-    if up then
-        dfs stu screen x y
-    let (down, std, ret) = trymove sta Direction.DOWN screen
-    if down  then
-        dfs std screen x y
-    let (left, stl, ret) = trymove sta Direction.LEFT screen
-    if  left then
-        dfs stl screen x y
-    let (right, str, ret) = trymove sta Direction.RIGHT screen
-    if right then
-        dfs str screen x y
+let rec dfs sta screen prev= 
+    Thread.Sleep(50)
+    let mutable lock=false
+    let mutable currentState = sta
+    if prev <> Direction.DOWN || prev = Direction.NULL then
+        let (up, stu, retu) = trymove currentState Direction.UP screen
+        if up then
+            lock <- true
+            currentState <- stu
+            Log.msg  "(%A, %A)" (currentState.player.x) (currentState.player.y)
+            dfs currentState screen Direction.UP
+
+    if prev <> Direction.UP || prev = Direction.NULL then
+        let (down, std, retd) = trymove currentState Direction.DOWN screen
+        if down  then
+            lock <- true
+            currentState <- std
+            Log.msg  "(%A, %A)" (currentState.player.x) (currentState.player.y)
+            dfs currentState screen Direction.DOWN
+
+    if prev <> Direction.RIGHT || prev = Direction.NULL then
+        let (left, stl, rel) = trymove currentState Direction.LEFT screen
+        if  left then
+            lock <- true
+            currentState <- stl
+            Log.msg  "(%A, %A)" (currentState.player.x) (currentState.player.y)
+            dfs currentState screen Direction.LEFT
+
+    if prev <> Direction.LEFT || prev = Direction.NULL then
+        let (right, str, retr) = trymove currentState Direction.RIGHT screen
+        if right then
+            lock <- true
+            currentState <- str
+            Log.msg  "(%A, %A)" (currentState.player.x) (currentState.player.y)
+            dfs currentState screen Direction.RIGHT
+            
+    if (not lock) && prev <> Direction.NULL  then 
+        Log.msg "Reset"
+        dfs currentState screen Direction.NULL
     
     
 
 let startResolver st screen =
-    dfs st screen 0 0
+    dfs st screen Direction.NULL
 
 let auto_start (key : ConsoleKeyInfo) (screen : wronly_raster) (st : state)= 
     startResolver st screen
