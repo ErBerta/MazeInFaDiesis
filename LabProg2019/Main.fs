@@ -12,6 +12,11 @@ open Globals
 open System.IO.Pipes
 open System.IO
 
+
+// game mode (client)
+//
+
+
 let main_game () =
     use p = new Process ()
     p.StartInfo.UseShellExecute <- true
