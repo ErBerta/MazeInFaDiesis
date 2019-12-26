@@ -12,11 +12,6 @@ open Globals
 open System.IO.Pipes
 open System.IO
 
-
-// game mode (client)
-//
-let mutable gameMod = Config.GameMod.Exit
-
 let main_game () =
     use p = new Process ()
     p.StartInfo.UseShellExecute <- true
@@ -31,12 +26,13 @@ let main_game () =
     Log <- new remote_logger (client)
     
     Menu.main (100,100)
-
-    //Maze.main (Config.GameMod.Player)
+    //in base alla modalita' di menu selezionata gestisco l'avvio
+    match Menu.scelta with
+    | Config.GameMod.Player | Config.GameMod.Auto -> Maze.main (Menu.scelta)
+    | Config.GameMod.Game2 -> failwith "funzione non implementata"
+    | Config.GameMod.Exit -> failwith "EXIT"
     
     0
-        
-    
 
 // log mode (server)
 //

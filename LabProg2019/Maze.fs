@@ -37,9 +37,8 @@ let H = 51
 let finex = W*2-4
 let finey = H-2
 
+//inizializza tutta la matrice MAZE a "muro"
 let initMaze dx dy = 
-    let six,siy = (1,1)
-    let eix,eiy = (dx-2,dy-2)
     { 
         Grid = Array2D.init dx dy 
             (fun _ _ -> Muro
@@ -48,7 +47,7 @@ let initMaze dx dy =
         Height = dy
     }
 
-
+//genera MAZE
 let generate (maze : Maze) : Maze =
     let isLegal (x,y) =
         //show maze |> ignore

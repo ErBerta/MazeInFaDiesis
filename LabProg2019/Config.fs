@@ -8,7 +8,7 @@ module LabProg2019.Config
 
 open Prelude
 
-let filled_pixel_char = '*' //'\u2588'    // ascii '\219' for character '█'
+let filled_pixel_char = '\219' //'\u2588'    // ascii '\219' for character '█'
 //let wall_pixel_char = '8' //'\u2588'    // ascii '\219' for character '█'
 let wall_pixel_char = '\219'
 let empty_pixel_char = ' '
