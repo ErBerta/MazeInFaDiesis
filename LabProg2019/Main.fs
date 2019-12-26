@@ -30,10 +30,10 @@ let main_game () =
     client.Connect ()
     Log <- new remote_logger (client)
     
-    Menu.main (100,100)
+    Menu.main (50,25)
     //in base alla modalita' di menu selezionata gestisco l'avvio
-    match Menu.scelta with
-    | Config.GameMod.Player | Config.GameMod.Auto -> Maze.main (Menu.scelta)
+    match Menu.gameMod with
+    | Config.GameMod.Player | Config.GameMod.Auto -> Maze.main (Menu.gameMod)
     | Config.GameMod.Game2 -> failwith "funzione non implementata"
     | Config.GameMod.Exit -> failwith "EXIT"
     

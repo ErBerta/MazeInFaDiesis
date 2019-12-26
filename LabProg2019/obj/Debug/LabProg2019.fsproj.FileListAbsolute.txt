@@ -66,3 +66,4 @@ C:\Users\bradi\Source\Repos\ErBerta\MazeInFaDiesis\LabProg2019\bin\Debug\tr\FSha
 C:\Users\bradi\Source\Repos\ErBerta\MazeInFaDiesis\LabProg2019\bin\Debug\zh-Hans\FSharp.Core.resources.dll
 C:\Users\bradi\Source\Repos\ErBerta\MazeInFaDiesis\LabProg2019\bin\Debug\zh-Hant\FSharp.Core.resources.dll
 C:\Users\bradi\Source\Repos\ErBerta\MazeInFaDiesis\LabProg2019\obj\Debug\LabProg2019.fsproj.CopyComplete
+G:\GitHub\MazeInFaDiesis\LabProg2019\obj\Debug\LabProg2019.fsprojAssemblyReference.cache

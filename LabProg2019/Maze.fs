@@ -37,13 +37,11 @@ let W = 51
 let H = 51
 let finex = W*2-4
 let finey = H-2
-
+let engine = new engine (2*W, H)
 //inizializza tutta la matrice MAZE a "muro"
 let initMaze dx dy = 
     { 
-        Grid = Array2D.init dx dy 
-            (fun _ _ -> Muro
-            ) 
+        Grid = Array2D.init dx dy (fun _ _ -> Muro) 
         Width = dx
         Height = dy
     }
@@ -51,22 +49,18 @@ let initMaze dx dy =
 //genera MAZE
 let generate (maze : Maze) : Maze =
     let isLegal (x,y) =
-        //show maze |> ignore
         x>0 && x < maze.Width-1 && y>0 && y<maze.Height-1
     
     let frontier (x,y) =
-        //show maze |> ignore
         [x-2,y; x+2,y; x,y-2; x,y+2] |> List.filter (fun (x,y) -> isLegal (x,y) && maze.Grid.[x,y] = Muro)
 
     
     let neighbor (x,y) =
-        //show maze |> ignore
         [x-2,y;x+2,y; x,y-2; x, y+2] |> List.filter (fun (x,y) -> isLegal (x,y) && maze.Grid.[x,y] = Passaggio)
     
     let randomCell () = rng.Next(maze.Width),rng.Next(maze.Height)
 
     let removeAt index (lst : (int * int) list) : (int * int) list =
-        //show maze |> ignore
         let x,y = lst.[index]
         lst |> List.filter (fun (a,b) -> not (a = x && b = y) )
     
@@ -119,6 +113,14 @@ let generate (maze : Maze) : Maze =
 
 let mazing = generate(initMaze W H)
 
+
+//gestione uscita "vittoria"
+let exit () = 
+    let rect= image.rectangle (11, 5, pixel.filled Color.Yellow, pixel.filled Color.Blue)
+    rect.draw_text("Vinto",3, 2, Color.Red, Color.Yellow)
+    ignore <| engine.create_and_register_sprite (rect, W-5, H/2, 2)
+
+//gestione movimenti modalita' interattiva
 let my_update (key : ConsoleKeyInfo) (screen : wronly_raster) (st : state) =
     let isWall (x,y) =
         if mazing.Grid.[int (st.player.x / 2. + x), int (st.player.y + y)] = Passaggio then 2.*x,y else 0.,0.
@@ -130,14 +132,18 @@ let my_update (key : ConsoleKeyInfo) (screen : wronly_raster) (st : state) =
         | 'a' -> isWall(-1., 0.)
         | 'd' -> isWall(1., 0.)
         | _   -> 0., 0.
-    // TODO: check bounds
-    //controllo se è arrivato
     st.player.move_by (dx, dy)
+    #if TEST
+    let pixArrivo = pixel.create(Config.wall_pixel_char, Color.Blue)
+    ignore <| engine.create_and_register_sprite (image.rectangle (2, 1, pixArrivo), int (st.player.x + dx), int (st.player.y+dy), 2)
+    Log.msg  "(%A, %A)" (st.player.x) (st.player.y)
+    #endif
+    //controllo se è arrivato
     if st.player.x+dx = float finex && st.player.y+dy = float finey then 
         st.player.clear 
         st.lab.clear
         st.arrived.clear
-        exit 0
+        exit ()
         st, false
     else
         st, key.KeyChar = 'q'
@@ -146,17 +152,18 @@ let my_update (key : ConsoleKeyInfo) (screen : wronly_raster) (st : state) =
 type Direction = | LEFT | RIGHT | UP | DOWN | NULL
 
 
-
+//gestione automatizzata ricerca percorso
 let trymove (stat:state) (direction:Direction) (screen : wronly_raster) =
     let dx= stat.player.x
     let dy= stat.player.y
+    //sfrutto la my_update della versione interattiva per la gestione dei movimenti
     let st, ret =
-        match direction with
-        | Direction.LEFT ->  my_update (new ConsoleKeyInfo ('a', new ConsoleKey(),false, false, false )) screen stat
-        | Direction.RIGHT ->  my_update (new ConsoleKeyInfo('d', new ConsoleKey(),false, false, false )) screen stat
-        | Direction.UP ->  my_update (new ConsoleKeyInfo('w', new ConsoleKey(),false, false, false )) screen stat
-        | Direction.DOWN ->  my_update (new ConsoleKeyInfo('s', new ConsoleKey(),false, false, false )) screen stat
-        | Direction.NULL -> (stat, false)
+            match direction with
+            | Direction.LEFT ->  my_update (new ConsoleKeyInfo ('a', new ConsoleKey(),false, false, false )) screen stat
+            | Direction.RIGHT ->  my_update (new ConsoleKeyInfo('d', new ConsoleKey(),false, false, false )) screen stat
+            | Direction.UP ->  my_update (new ConsoleKeyInfo('w', new ConsoleKey(),false, false, false )) screen stat
+            | Direction.DOWN ->  my_update (new ConsoleKeyInfo('s', new ConsoleKey(),false, false, false )) screen stat
+            | Direction.NULL -> (stat, false)
 
     if stat.player.x = dx && stat.player.y = dy then
         (false, st, ret)
@@ -168,6 +175,7 @@ let rec dfs sta screen prev=
     let mutable lock=false
     let mutable currentState = sta
     if prev <> Direction.DOWN || prev = Direction.NULL then
+        Log.msg  "(%A, %A)" (currentState.player.x) (currentState.player.y)
         let (up, stu, retu) = trymove currentState Direction.UP screen
         if up then
             lock <- true
@@ -176,6 +184,7 @@ let rec dfs sta screen prev=
             dfs currentState screen Direction.UP
 
     if prev <> Direction.UP || prev = Direction.NULL then
+        Log.msg  "(%A, %A)" (currentState.player.x) (currentState.player.y)
         let (down, std, retd) = trymove currentState Direction.DOWN screen
         if down  then
             lock <- true
@@ -184,6 +193,7 @@ let rec dfs sta screen prev=
             dfs currentState screen Direction.DOWN
 
     if prev <> Direction.RIGHT || prev = Direction.NULL then
+        Log.msg  "(%A, %A)" (currentState.player.x) (currentState.player.y)
         let (left, stl, rel) = trymove currentState Direction.LEFT screen
         if  left then
             lock <- true
@@ -192,6 +202,7 @@ let rec dfs sta screen prev=
             dfs currentState screen Direction.LEFT
 
     if prev <> Direction.LEFT || prev = Direction.NULL then
+        Log.msg  "(%A, %A)" (currentState.player.x) (currentState.player.y)
         let (right, str, retr) = trymove currentState Direction.RIGHT screen
         if right then
             lock <- true
@@ -203,32 +214,32 @@ let rec dfs sta screen prev=
         Log.msg "Reset"
         dfs currentState screen Direction.NULL
     
-    
-
+#if TEST    
+let rec ricerca st screen =
+    if trymove st Direction.DOWN screen then ricerca st screen
+    if trymove st Direction.RIGHT screen then ricerca st screen
+    if trymove st Direction.LEFT screen then ricerca st screen
+    if trymove st Direction.UP screen then ricerca st screen
+#endif
 let startResolver st screen =
-    dfs st screen Direction.NULL
 
-let auto_start (key : ConsoleKeyInfo) (screen : wronly_raster) (st : state)= 
+    dfs st screen Direction.NULL
+    #if TEST
+    ricerca st screen
+    #endif
+
+let auto_start (key : ConsoleKeyInfo) (screen : wronly_raster) (st : state) : (state*bool)= 
     startResolver st screen
+    #if TEST
+    ricerca st screen
+    #endif
     st, false
 
 
 let main (gm: Config.GameMod) =
-    let engine = new engine (2*W, H)
-    //mazing = generate (initMaze W H) 
-
-
-    let exit () = 
-        let rect= image.rectangle (11, 5, pixel.filled Color.Yellow, pixel.filled Color.Blue)
-        rect.draw_text("Vinto",3, 2, Color.Red, Color.Yellow)
-        ignore <| engine.create_and_register_sprite (rect, W-5, H/2, 2)
-        //let a = new image (W/2, 1)
-        
-        //ignore <| engine.create_and_register_sprite (a, W/4, H/4, 4)
-        
-    
-
+    //stampaggio maze sfruttando il motore
     let maz (grid: Maze): pixel[] = 
+        //creo un'array contenente tutti i pixel della matrice
         let pixelarray = Array.zeroCreate ((grid.Height)*(grid.Width)*2) 
         grid.Grid |> Array2D.iteri 
             (fun y x cell ->

@@ -56,15 +56,15 @@ let main (W,H) =
             | _ -> failwith "errore"
 
         //salvo lo stato 'exit' per interpretarlo correttamente una volta arrivato al main
-        if key.KeyChar = 'q' then scelta <- Config.GameMod.Exit 
+        if key.KeyChar = 'q' then gameMod <- Config.GameMod.Exit 
         //se vengono premuti i caratteri 'q' e 'p' esco dal loop e passo al main per l'esecuzione del gioco
         if key.KeyChar = 'q' || key.KeyChar = 'p' then st,true else st,false
 
     //creo lo sfondo del menu' utilizzando un quadrato gia' supportato dal motore
-    let menu = engine.create_and_register_sprite (image.rectangle (100, 50, pixel.filled Color.Yellow, pixel.filled Color.Blue),0,0,1)
+    let menu = engine.create_and_register_sprite (image.rectangle (W, H/2, pixel.filled Color.Yellow, pixel.filled Color.Blue),0,0,1)
     menu.draw_text("Game\n_1._Labirinto\n_2._Labirinto_automatico\n_3._Altro\n_4._\n", 2, 1, Color.Red, Color.Yellow)
     //creo lo sprite del menu' (un rettangolo colorato che si muove su e giu)
-    let pixScelta = pixel.create(Config.wall_pixel_char, Color.Blue)
+    let pixScelta = pixel.create(Config.wall_pixel_char, Color.Red)
     let scelta = engine.create_and_register_sprite (image.rectangle (1, 1, pixScelta), 2, 2, 2)
     //salvo lo stato dello sprite
     let st0 = {
