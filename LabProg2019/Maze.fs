@@ -118,9 +118,7 @@ let mazing = generate(initMaze W H)
 let exit (st:state) = 
     let rect= image.rectangle (11, 5, pixel.filled Color.Yellow, pixel.filled Color.Blue)
     rect.draw_text("Vinto",3, 2, Color.Red, Color.Yellow)
-    ignore <| engine.create_and_register_sprite (rect, W-5, H/2, 2)
-    st.lab.clear
-    st.lab.commit
+    ignore <| engine.create_and_register_sprite (rect, W-5, H/2, 5)
     
 
 //gestione movimenti modalita' interattiva
@@ -136,28 +134,42 @@ let my_update (key : ConsoleKeyInfo) (screen : wronly_raster) (st : state) =
         | 'd' -> isWall(1., 0.)
         | _   -> 0., 0.
     
-    #if !TEST
-    st.player.move_by (dx, dy)
-    let pixArrivo = pixel.create(Config.wall_pixel_char, Color.Blue)
-    ignore <| engine.create_and_register_sprite (image.rectangle (2, 1, pixArrivo), int (st.player.x), int (st.player.y), 2)
+    let pixpercorso = pixel.create(Config.wall_pixel_char, Color.Blue)
+    ignore <| engine.create_and_register_sprite (image.rectangle (2, 1, pixpercorso), int (st.player.x), int (st.player.y), 2)
     Log.msg  "(%A, %A)" (st.player.x) (st.player.y)
-    #endif
+
+    st.player.move_by (dx, dy)
     //controllo se è arrivato
-    if st.player.x+dx = float finex && st.player.y+dy = float finey then 
-        st.player.clear 
-        st.lab.clear
+    if st.player.x = float finex && st.player.y = float finey then 
+        st.player.clear
         st.arrived.clear
         exit st
-        st, false
+        st, true
     else
         st, key.KeyChar = 'q'
 
-
+//   
 type Direction = | LEFT | RIGHT | UP | DOWN | NULL
 
 
 //gestione automatizzata ricerca percorso
 let trymove (stat:state) (direction:Direction) (screen : wronly_raster) =
+    let isWall (x,y) =
+        if mazing.Grid.[int (stat.player.x / 2. + x), int (stat.player.y + y)] = Passaggio then 2.*x,y else 0.,0.
+
+    let dx= stat.player.x
+    let dy= stat.player.y
+    //sfrutto la my_update della versione interattiva per la gestione dei movimenti
+    let ret =
+            match direction with
+            | Direction.LEFT ->  isWall(-1., 0.)
+            | Direction.RIGHT ->  isWall(1., 0.)
+            | Direction.UP ->  isWall(0.,-1.)
+            | Direction.DOWN ->  isWall(0., 1.)
+            | Direction.NULL -> 0.,0.
+    ret
+
+let move (stat:state) (direction:Direction) (screen : wronly_raster) =
     let dx= stat.player.x
     let dy= stat.player.y
     //sfrutto la my_update della versione interattiva per la gestione dei movimenti
@@ -168,105 +180,57 @@ let trymove (stat:state) (direction:Direction) (screen : wronly_raster) =
             | Direction.UP ->  my_update (new ConsoleKeyInfo('w', new ConsoleKey(),false, false, false )) screen stat
             | Direction.DOWN ->  my_update (new ConsoleKeyInfo('s', new ConsoleKey(),false, false, false )) screen stat
             | Direction.NULL -> (stat, false)
-    #if TEST
-    if stat.player.x = dx && stat.player.y = dy then
-        (false, st, ret)
-    else 
-        (true, st, ret)
-    #else
     if stat.player.x = dx && stat.player.y = dy then
         false
     else 
         true
-    #endif
-#if TEST
-let rec dfs sta screen prev= 
-    Thread.Sleep(50)
-    let mutable lock=false
-    let mutable currentState = sta
-    //devo controllare se un nodo e' gia' stato visitato
-    //al momento controlliamo solo il nodo precedente
-    if prev <> Direction.DOWN || prev = Direction.NULL then
-        Log.msg  "(%A, %A)" (currentState.player.x) (currentState.player.y)
-        let (up, stu, retu) = trymove currentState Direction.UP screen
-        if up then
-            lock <- true
-            currentState <- stu
-            Log.msg  "(%A, %A)" (currentState.player.x) (currentState.player.y)
-            dfs currentState screen Direction.UP
 
-    if prev <> Direction.UP || prev = Direction.NULL then
-        Log.msg  "(%A, %A)" (currentState.player.x) (currentState.player.y)
-        let (down, std, retd) = trymove currentState Direction.DOWN screen
-        if down  then
-            lock <- true
-            currentState <- std
-            Log.msg  "(%A, %A)" (currentState.player.x) (currentState.player.y)
-            dfs currentState screen Direction.DOWN
-
-    if prev <> Direction.RIGHT || prev = Direction.NULL then
-        Log.msg  "(%A, %A)" (currentState.player.x) (currentState.player.y)
-        let (left, stl, rel) = trymove currentState Direction.LEFT screen
-        if  left then
-            lock <- true
-            currentState <- stl
-            Log.msg  "(%A, %A)" (currentState.player.x) (currentState.player.y)
-            dfs currentState screen Direction.LEFT
-
-    if prev <> Direction.LEFT || prev = Direction.NULL then
-        Log.msg  "(%A, %A)" (currentState.player.x) (currentState.player.y)
-        let (right, str, retr) = trymove currentState Direction.RIGHT screen
-        if right then
-            lock <- true
-            currentState <- str
-            Log.msg  "(%A, %A)" (currentState.player.x) (currentState.player.y)
-            dfs currentState screen Direction.RIGHT
-            
-    if (not lock) && prev <> Direction.NULL  then 
-        Log.msg "Reset"
-        dfs currentState screen Direction.NULL
-#endif
-#if !TEST 
 type Visit = Visited | NotVisited
 let mutable Vis = Array2D.init W H (fun _ _ -> NotVisited)
 
-let rec research (st:state) screen =
-    //devo fare in modo che trymove non esegua nessun movimento ma solo un tentativo di spostamento
-    if trymove st Direction.UP screen && (Vis.[int st.player.x,int st.player.y]<>Visited) then
-        Vis.[int st.player.x,int st.player.y] <- Visited
+let rec research (st:state) screen (dx,dy) =
+    //ora devo gestire il "tornare indietro"
+    let dxd, dyd = trymove st Direction.DOWN screen
+    if (dxd,dyd)<>(0.,0.) && (Vis.[(int st.player.x+int dxd)/2,int st.player.y+ int dyd]<>Visited) then
+        Vis.[int st.player.x/2,int st.player.y] <- Visited
+        if not(move st Direction.DOWN screen) then
+            failwith "Error"
         Log.msg  "(%A, %A)" (st.player.x) (st.player.y)
-        research st screen
+        research st screen (dxd,dyd)
 
-    if trymove st Direction.DOWN screen && (Vis.[int st.player.x,int st.player.y]<>Visited) then
-        Vis.[int st.player.x,int st.player.y] <- Visited
+    let dxr, dyr = trymove st Direction.RIGHT screen
+    if (dxr,dyr)<>(0.,0.) && (Vis.[(int st.player.x + int dxr)/2,int st.player.y + int dyr]<>Visited) then
+        Vis.[int st.player.x/2,int st.player.y] <- Visited
+        if not(move st Direction.RIGHT screen) then
+            failwith "Error"
         Log.msg  "(%A, %A)" (st.player.x) (st.player.y)
-        research st screen
+        research st screen (dxr,dyr)
 
-    if trymove st Direction.RIGHT screen && (Vis.[int st.player.x,int st.player.y]<>Visited) then
-        Vis.[int st.player.x,int st.player.y] <- Visited
+    let dxl, dyl = trymove st Direction.LEFT screen
+    if (dxl,dyl)<>(0.,0.) && (Vis.[(int st.player.x + int dxl)/2,int st.player.y + int dyl]<>Visited) then
+        Vis.[int st.player.x/2,int st.player.y] <- Visited
+        if not(move st Direction.LEFT screen) then
+            failwith "Error"
         Log.msg  "(%A, %A)" (st.player.x) (st.player.y)
-        research st screen
-    
-    if trymove st Direction.LEFT screen && (Vis.[int st.player.x,int st.player.y]<>Visited) then
-        Vis.[int st.player.x,int st.player.y] <- Visited
-        Log.msg  "(%A, %A)" (st.player.x) (st.player.y)
-        research st screen
+        research st screen (dxl,dyl)
 
-#endif
+    let dxu, dyu = trymove st Direction.UP screen
+    if (dxu,dyu)<>(0.,0.) && (Vis.[(int st.player.x+ int dxu)/2 ,int st.player.y + int dyu]<>Visited) then
+        Vis.[(int st.player.x)/2,int st.player.y] <- Visited
+        if not(move st Direction.UP screen) then
+            failwith "Error"
+        Log.msg  "(%A, %A)" (st.player.x) (st.player.y)
+        research st screen (dxu,dyu)
+
+    st.player.move_by(-dx,-dy)
+
 let startResolver st screen =
-    #if TEST
-    dfs st screen Direction.NULL
-    #else
-    research st screen
-    #endif
+    research st screen (0.,0.)
+
 
 let auto_start (key : ConsoleKeyInfo) (screen : wronly_raster) (st : state) : (state*bool)= 
     startResolver st screen
-    #if TEST
-    research st screen
-    #endif
     st, false
-
 
 let main (gm: Config.GameMod) =
     //stampaggio maze sfruttando il motore
@@ -294,19 +258,14 @@ let main (gm: Config.GameMod) =
     let giocatore = engine.create_and_register_sprite (image.rectangle (2, 1, pixGiocatore), 2, 1, 2)
     let arrivo = engine.create_and_register_sprite (image.rectangle (2, 1, pixArrivo), finex, finey, 2)
     //let player = engine.create_and_register_sprite (image.circle (2, pixel.filled Color.White, pixel.filled Color.Gray), W / 2, H / 2, 1)
-
     // initialize state
     let st0 = { 
         player = giocatore
         lab = labirinto
         arrived = arrivo
     }
-    
-    
-    
-    //start engine
-    
 
+    //start engine
     if gm = Config.GameMod.Auto 
     then
         engine.loop_on_key auto_start st0 
