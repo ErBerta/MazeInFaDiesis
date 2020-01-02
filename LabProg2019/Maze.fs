@@ -135,11 +135,13 @@ let my_update (key : ConsoleKeyInfo) (screen : wronly_raster) (st : state) =
         | 'd' -> isWall(1., 0.)
         | _   -> 0., 0.
     
-    let pixpercorso = pixel.create(Config.wall_pixel_char, Color.Blue)
+    st.player.move_by (dx, dy)
+
+    let pixpercorso = pixel.create(Config.percorso_pixel_char, Color.Blue)
     ignore <| engine.create_and_register_sprite (image.rectangle (2, 1, pixpercorso), int (st.player.x), int (st.player.y), 2)
     Log.msg  "(%A, %A)" (st.player.x) (st.player.y)
 
-    st.player.move_by (dx, dy)
+    
     //st.player.draw screen
     //controllo se è arrivato
     if st.player.x = float finex && st.player.y = float finey then 
@@ -182,68 +184,90 @@ let move (stat:state) (direction:Direction) (screen : wronly_raster) =
             | Direction.UP ->  my_update (new ConsoleKeyInfo('w', new ConsoleKey(),false, false, false )) screen stat
             | Direction.DOWN ->  my_update (new ConsoleKeyInfo('s', new ConsoleKey(),false, false, false )) screen stat
             | Direction.NULL -> (stat, false)
-    engine.update_screen screen
+    //engine.update_screen screen
+    engine.refresh st false
     if stat.player.x = dx && stat.player.y = dy then
-        (st, ret, false)
+        (ret, false)
     else 
-        (st, ret, true)
+        (ret, true)
 
 type Visit = Visited | NotVisited
 let mutable Vis = Array2D.init W H (fun _ _ -> NotVisited)
-
+let mutable stop = false
 let rec research (st:state) screen (dx,dy) =
-    Thread.Sleep(100)
+    let wait = 1
+    if not stop then
+        Thread.Sleep(wait)
+        let dxd, dyd = trymove st Direction.DOWN screen
+        if (dxd,dyd)<>(0.,0.) && (Vis.[(int st.player.x+int dxd)/2,int st.player.y+ int dyd] <> Visited) then
+            //Thread.Sleep(wait)
+            Vis.[int st.player.x/2,int st.player.y] <- Visited
+            let reto, fao = move st Direction.DOWN screen
+            if not(fao) then
+                failwith "Error"
+            Log.msg  "(%A, %A)" (st.player.x) (st.player.y)
+            if not reto then
+                research st screen (dxd,dyd)
+            else
+                stop <- true
+        
+    if not stop then
+        let dxr, dyr = trymove st Direction.RIGHT screen
+        if (dxr,dyr)<>(0.,0.) && (Vis.[(int st.player.x + int dxr)/2,int st.player.y + int dyr] <> Visited) then
+            //Thread.Sleep(wait)
+            Vis.[int st.player.x/2,int st.player.y] <- Visited
+            let reto, fao = move st Direction.RIGHT screen
+            if not(fao) then
+                failwith "Error"
+            Log.msg  "(%A, %A)" (st.player.x) (st.player.y)
+            if not reto then
+                research st screen (dxr,dyr)
+            else
+                stop <- true
 
-    //ora devo gestire il "tornare indietro"
-    let dxd, dyd = trymove st Direction.DOWN screen
-    if (dxd,dyd)<>(0.,0.) && (Vis.[(int st.player.x+int dxd)/2,int st.player.y+ int dyd] <> Visited) then
-        Vis.[int st.player.x/2,int st.player.y] <- Visited
-        let sto, reto, fao = move st Direction.DOWN screen
-        if not(fao) then
-            failwith "Error"
-        Log.msg  "(%A, %A)" (st.player.x) (st.player.y)
-        if not reto then
-            research sto screen (dxd,dyd)
+    if not stop then
+        let dxl, dyl = trymove st Direction.LEFT screen
+        if (dxl,dyl)<>(0.,0.) && (Vis.[(int st.player.x + int dxl)/2,int st.player.y + int dyl] <> Visited) then
+            //Thread.Sleep(wait)
+            Vis.[int st.player.x/2,int st.player.y] <- Visited
+            let reto, fao = move st Direction.LEFT screen
+            if not(fao) then
+                failwith "Error"
+            Log.msg  "(%A, %A)" (st.player.x) (st.player.y)
+            if not reto then
+                research st screen (dxl,dyl)
+            else
+                stop <- true
 
-    let dxr, dyr = trymove st Direction.RIGHT screen
-    if (dxr,dyr)<>(0.,0.) && (Vis.[(int st.player.x + int dxr)/2,int st.player.y + int dyr] <> Visited) then
-        Vis.[int st.player.x/2,int st.player.y] <- Visited
-        let sto, reto, fao = move st Direction.RIGHT screen
-        if not(fao) then
-            failwith "Error"
-        Log.msg  "(%A, %A)" (st.player.x) (st.player.y)
-        if not reto then
-            research sto screen (dxr,dyr)
+    if not stop then
+        let dxu, dyu = trymove st Direction.UP screen
+        if (dxu,dyu)<>(0.,0.) && (Vis.[(int st.player.x+ int dxu)/2 ,int st.player.y + int dyu] <> Visited) then
+            //Thread.Sleep(wait)
+            Vis.[(int st.player.x)/2,int st.player.y] <- Visited
+            let reto, fao = move st Direction.UP screen
+            if not(fao) then
+                failwith "Error"
+            Log.msg  "(%A, %A)" (st.player.x) (st.player.y)
+            if not reto then
+                research st screen (dxu,dyu)
+            else
+                stop <- true
 
-    let dxl, dyl = trymove st Direction.LEFT screen
-    if (dxl,dyl)<>(0.,0.) && (Vis.[(int st.player.x + int dxl)/2,int st.player.y + int dyl] <> Visited) then
-        Vis.[int st.player.x/2,int st.player.y] <- Visited
-        let sto, reto, fao =move st Direction.LEFT screen
-        if not(fao) then
-            failwith "Error"
-        Log.msg  "(%A, %A)" (st.player.x) (st.player.y)
-        if not reto then
-            research sto screen (dxl,dyl)
-
-    let dxu, dyu = trymove st Direction.UP screen
-    if (dxu,dyu)<>(0.,0.) && (Vis.[(int st.player.x+ int dxu)/2 ,int st.player.y + int dyu] <> Visited) then
-        Vis.[(int st.player.x)/2,int st.player.y] <- Visited
-        let sto, reto, fao = move st Direction.UP screen
-        if not(fao) then
-            failwith "Error"
-        Log.msg  "(%A, %A)" (st.player.x) (st.player.y)
-        if not reto then
-            research sto screen (dxu,dyu)
-
-    st.player.move_by(-dx,-dy)
-
+    if not stop then
+        st.player.move_by(-dx,-dy)
+        Thread.Sleep(wait)
+        engine.refresh st false
+    
 let startResolver st screen =
     research st screen (0.,0.)
 
 
-let auto_start (key : ConsoleKeyInfo) (screen : wronly_raster) (st : state) : (state*bool)= 
-    startResolver st screen
-    st, false
+let auto_start (key : ConsoleKeyInfo) (screen : wronly_raster) (st : state) : (state*bool) = 
+    if key.KeyChar = 's'then 
+        startResolver st screen
+        st, true
+    else
+        st, false
 
 let main (gm: Config.GameMod) =
     //stampaggio maze sfruttando il motore

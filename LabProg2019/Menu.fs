@@ -37,17 +37,6 @@ let main (W,H) =
 
         //controllo la posizione y della scelta per individuare la modalita' del gioco da avviare
         if key.KeyChar = 'p' then
-            (*gameMod <-
-                match (st.menuscelta.y - 1.) with
-                    | 1. ->  Config.GameMod.Player
-                    | 2. ->  Config.GameMod.Auto
-                    | 3. ->  Config.GameMod.Game2
-                    | 4. ->  Config.GameMod.Player
-                    | _ -> Config.GameMod.Exit
-            Maze.main (gameMod)
-        
-        st, key.KeyChar = 'q'
-        *)
             match (st.menuscelta.y - 1.) with
             | 1. -> gameMod <- Config.GameMod.Player
             | 2. -> gameMod <- Config.GameMod.Auto
