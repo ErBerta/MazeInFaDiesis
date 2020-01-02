@@ -35,6 +35,7 @@ type Maze = {
 
 let W = 51
 let H = 51
+
 let finex = W*2-4
 let finey = H-2
 let engine = new engine (2*W, H)
@@ -139,6 +140,7 @@ let my_update (key : ConsoleKeyInfo) (screen : wronly_raster) (st : state) =
     Log.msg  "(%A, %A)" (st.player.x) (st.player.y)
 
     st.player.move_by (dx, dy)
+    //st.player.draw screen
     //controllo se è arrivato
     if st.player.x = float finex && st.player.y = float finey then 
         st.player.clear
@@ -180,47 +182,58 @@ let move (stat:state) (direction:Direction) (screen : wronly_raster) =
             | Direction.UP ->  my_update (new ConsoleKeyInfo('w', new ConsoleKey(),false, false, false )) screen stat
             | Direction.DOWN ->  my_update (new ConsoleKeyInfo('s', new ConsoleKey(),false, false, false )) screen stat
             | Direction.NULL -> (stat, false)
+    engine.update_screen screen
     if stat.player.x = dx && stat.player.y = dy then
-        false
+        (st, ret, false)
     else 
-        true
+        (st, ret, true)
 
 type Visit = Visited | NotVisited
 let mutable Vis = Array2D.init W H (fun _ _ -> NotVisited)
 
 let rec research (st:state) screen (dx,dy) =
+    Thread.Sleep(100)
+
     //ora devo gestire il "tornare indietro"
     let dxd, dyd = trymove st Direction.DOWN screen
-    if (dxd,dyd)<>(0.,0.) && (Vis.[(int st.player.x+int dxd)/2,int st.player.y+ int dyd]<>Visited) then
+    if (dxd,dyd)<>(0.,0.) && (Vis.[(int st.player.x+int dxd)/2,int st.player.y+ int dyd] <> Visited) then
         Vis.[int st.player.x/2,int st.player.y] <- Visited
-        if not(move st Direction.DOWN screen) then
+        let sto, reto, fao = move st Direction.DOWN screen
+        if not(fao) then
             failwith "Error"
         Log.msg  "(%A, %A)" (st.player.x) (st.player.y)
-        research st screen (dxd,dyd)
+        if not reto then
+            research sto screen (dxd,dyd)
 
     let dxr, dyr = trymove st Direction.RIGHT screen
-    if (dxr,dyr)<>(0.,0.) && (Vis.[(int st.player.x + int dxr)/2,int st.player.y + int dyr]<>Visited) then
+    if (dxr,dyr)<>(0.,0.) && (Vis.[(int st.player.x + int dxr)/2,int st.player.y + int dyr] <> Visited) then
         Vis.[int st.player.x/2,int st.player.y] <- Visited
-        if not(move st Direction.RIGHT screen) then
+        let sto, reto, fao = move st Direction.RIGHT screen
+        if not(fao) then
             failwith "Error"
         Log.msg  "(%A, %A)" (st.player.x) (st.player.y)
-        research st screen (dxr,dyr)
+        if not reto then
+            research sto screen (dxr,dyr)
 
     let dxl, dyl = trymove st Direction.LEFT screen
-    if (dxl,dyl)<>(0.,0.) && (Vis.[(int st.player.x + int dxl)/2,int st.player.y + int dyl]<>Visited) then
+    if (dxl,dyl)<>(0.,0.) && (Vis.[(int st.player.x + int dxl)/2,int st.player.y + int dyl] <> Visited) then
         Vis.[int st.player.x/2,int st.player.y] <- Visited
-        if not(move st Direction.LEFT screen) then
+        let sto, reto, fao =move st Direction.LEFT screen
+        if not(fao) then
             failwith "Error"
         Log.msg  "(%A, %A)" (st.player.x) (st.player.y)
-        research st screen (dxl,dyl)
+        if not reto then
+            research sto screen (dxl,dyl)
 
     let dxu, dyu = trymove st Direction.UP screen
-    if (dxu,dyu)<>(0.,0.) && (Vis.[(int st.player.x+ int dxu)/2 ,int st.player.y + int dyu]<>Visited) then
+    if (dxu,dyu)<>(0.,0.) && (Vis.[(int st.player.x+ int dxu)/2 ,int st.player.y + int dyu] <> Visited) then
         Vis.[(int st.player.x)/2,int st.player.y] <- Visited
-        if not(move st Direction.UP screen) then
+        let sto, reto, fao = move st Direction.UP screen
+        if not(fao) then
             failwith "Error"
         Log.msg  "(%A, %A)" (st.player.x) (st.player.y)
-        research st screen (dxu,dyu)
+        if not reto then
+            research sto screen (dxu,dyu)
 
     st.player.move_by(-dx,-dy)
 
@@ -254,7 +267,7 @@ let main (gm: Config.GameMod) =
     //ignore <| 
     let labirinto = engine.create_and_register_sprite (new image (W*2,H,(maz mazing)), 0, 0, 0)
     let pixGiocatore = pixel.create(Config.wall_pixel_char, Color.Red)
-    let pixArrivo = pixel.create(Config.wall_pixel_char, Color.Blue)
+    let pixArrivo = pixel.create(Config.wall_pixel_char, Color.Yellow)
     let giocatore = engine.create_and_register_sprite (image.rectangle (2, 1, pixGiocatore), 2, 1, 2)
     let arrivo = engine.create_and_register_sprite (image.rectangle (2, 1, pixArrivo), finex, finey, 2)
     //let player = engine.create_and_register_sprite (image.circle (2, pixel.filled Color.White, pixel.filled Color.Gray), W / 2, H / 2, 1)

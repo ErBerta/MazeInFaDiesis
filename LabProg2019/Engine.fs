@@ -60,6 +60,10 @@ type engine (w : int, h : int, ?fps_cap : int, ?flip_queue) =
     /// Get the height of the output console.
     member val screen_height = h 
 
+    member this.update_screen wr= 
+        lock sprites <| fun () -> for spr in sprites do spr.draw wr
+        
+
     /// Register the given sprite so that the engine knows it and renders it each frame according to its z value.
     member __.register_sprite (spr : sprite) =
         let len = lock sprites <| fun () ->
