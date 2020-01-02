@@ -121,6 +121,9 @@ let exit (st:state) =
     rect.draw_text("Vinto",3, 2, Color.Red, Color.Yellow)
     ignore <| engine.create_and_register_sprite (rect, W-5, H/2, 5)
     
+let creaPixPercorso st colore carattere z =
+    let pixpercorso = pixel.create(carattere, colore)
+    ignore <| engine.create_and_register_sprite (image.rectangle (2, 1, pixpercorso), int (st.player.x), int (st.player.y), z)
 
 //gestione movimenti modalita' interattiva
 let my_update (key : ConsoleKeyInfo) (screen : wronly_raster) (st : state) =
@@ -136,9 +139,8 @@ let my_update (key : ConsoleKeyInfo) (screen : wronly_raster) (st : state) =
         | _   -> 0., 0.
     
     st.player.move_by (dx, dy)
-
-    let pixpercorso = pixel.create(Config.percorso_pixel_char, Color.Blue)
-    ignore <| engine.create_and_register_sprite (image.rectangle (2, 1, pixpercorso), int (st.player.x), int (st.player.y), 2)
+    creaPixPercorso st Color.Cyan Config.filled_pixel_char 2
+    
     Log.msg  "(%A, %A)" (st.player.x) (st.player.y)
 
     
@@ -254,6 +256,7 @@ let rec research (st:state) screen (dx,dy) =
                 stop <- true
 
     if not stop then
+        creaPixPercorso st Color.Red Config.filled_pixel_char 4
         st.player.move_by(-dx,-dy)
         Thread.Sleep(wait)
         engine.refresh st false
