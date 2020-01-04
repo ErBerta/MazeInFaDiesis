@@ -51,7 +51,7 @@ let main (W,H) =
 
     //creo lo sfondo del menu' utilizzando un quadrato gia' supportato dal motore
     let menu = engine.create_and_register_sprite (image.rectangle (W, H/2, pixel.filled Color.Blue, pixel.filled Color.Yellow),0,0,1)
-    menu.draw_text("Game\n_1._Labirinto\n_2._Labirinto_automatico\n_3._Altro\n_4._\n", 2, 1, Color.Red, Color.Yellow)
+    menu.draw_text("Game\n_1._Labirinto\n_2._Labirinto_automatico\n_3._Altro\n_4._\n\n\nUse_W^_Sv_to_move.\nPress_'p'_to_enter_or_'q'_to_quit\n", 2, 1, Color.Red, Color.Yellow)
     //creo lo sprite del menu' (un rettangolo colorato che si muove su e giu)
     let pixScelta = pixel.create(Config.wall_pixel_char, Color.Red)
     let scelta = engine.create_and_register_sprite (image.rectangle (1, 1, pixScelta), 2, 2, 2)

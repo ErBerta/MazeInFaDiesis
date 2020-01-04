@@ -35,7 +35,7 @@ let main_game () =
     match Menu.gameMod with
     | Config.GameMod.Player | Config.GameMod.Auto -> Maze.main (Menu.gameMod)
     | Config.GameMod.Game2 -> failwith "funzione non implementata"
-    | Config.GameMod.Exit -> failwith "EXIT"
+    | Config.GameMod.Exit -> exit 0
     
     0
 
