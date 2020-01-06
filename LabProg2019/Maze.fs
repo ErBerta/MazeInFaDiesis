@@ -23,13 +23,16 @@ type state = {
     lab : sprite
     arrived : sprite
 }
-
+//Definizione tipi di supporto
+type Direction = | LEFT | RIGHT | UP | DOWN | NULL
+type Visit = Visited | NotVisited
 type Cell = | Muro | Passaggio
 
 type Maze = { 
     Grid : Cell[,]
     Width : int
     Height : int
+    Visited : Visit[,]
 }
 
 
@@ -54,6 +57,7 @@ let initMaze dx dy =
         Grid = Array2D.init dx dy (fun _ _ -> Muro) 
         Width = dx
         Height = dy
+        Visited = Array2D.init W H (fun _ _ -> NotVisited)
     }
 
 ///Generatore del labirinto
@@ -134,7 +138,7 @@ let generate (maze : Maze) : Maze =
 let mazing = generate(initMaze W H)
 
 //gestione uscita "vittoria"
-let exit (st:state) = 
+let exit () = 
     let rect= image.rectangle (11, 5, pixel.filled Color.Yellow, pixel.filled Color.Blue)
     rect.draw_text("Vinto",3, 2, Color.Red, Color.Yellow)
     ignore <| engine.create_and_register_sprite (rect, W-5, H/2, 5)
@@ -169,14 +173,12 @@ let my_update (key : ConsoleKeyInfo) (screen : wronly_raster) (st : state) =
     if st.player.x = float finex && st.player.y = float finey then 
         st.player.clear
         st.arrived.clear
-        exit st
+        exit ()
         st, true
     else
         st, key.KeyChar = 'q'
 
-//Definizione tipi di supporto
-type Direction = | LEFT | RIGHT | UP | DOWN | NULL
-type Visit = Visited | NotVisited
+
 
 let AutoResolver st screen =    
     ///Funzione per testare se è possibile spostarsi nella posizione specificata
@@ -184,8 +186,6 @@ let AutoResolver st screen =
         let isWall (x,y) =
             if mazing.Grid.[int (stat.player.x / 2. + x), int (stat.player.y + y)] = Passaggio then 2.*x,y else 0.,0.
 
-        let dx= stat.player.x
-        let dy= stat.player.y
         let ret =
                 match direction with
                 | Direction.LEFT ->  isWall(-1., 0.)
@@ -213,9 +213,6 @@ let AutoResolver st screen =
             (ret, false)
         else 
             (ret, true)
-
-    //inizializazione matrice a Con tutti i valori nulli (non visitati)
-    let Vis = Array2D.init W H (fun _ _ -> NotVisited)  //<-------------- ELIA! E se usassimo la mazing, che è la griglia generata all'inizio, invece di creare un altra matrice delle stesse dimensioni????
     
     //flag per identificare l'arrivo
     let mutable stop = false
@@ -227,10 +224,10 @@ let AutoResolver st screen =
             Thread.Sleep(wait)
             //controllo la possibilità di spostarmi in giù e di non esserci gia andato
             let dxd, dyd = trymove st Direction.DOWN 
-            if (dxd,dyd)<>(0.,0.) && (Vis.[(int st.player.x+int dxd)/2,int st.player.y+ int dyd] <> Visited) then
+            if (dxd,dyd)<>(0.,0.) && (mazing.Visited.[(int st.player.x+int dxd)/2,int st.player.y+ int dyd] <> Visited) then
                 //Thread.Sleep(wait)
                 //aggiorno la matrice 
-                Vis.[int st.player.x/2,int st.player.y] <- Visited
+                mazing.Visited.[int st.player.x/2,int st.player.y] <- Visited
                 let reto, fao = move st Direction.DOWN screen
                 if not(fao) then
                     failwith "Error"
@@ -243,9 +240,9 @@ let AutoResolver st screen =
         if not stop then
         //controllo la possibilità di spostarmi a destra e di non esserci gia andato
             let dxr, dyr = trymove st Direction.RIGHT
-            if (dxr,dyr)<>(0.,0.) && (Vis.[(int st.player.x + int dxr)/2,int st.player.y + int dyr] <> Visited) then
+            if (dxr,dyr)<>(0.,0.) && (mazing.Visited.[(int st.player.x + int dxr)/2,int st.player.y + int dyr] <> Visited) then
                 //Thread.Sleep(wait)
-                Vis.[int st.player.x/2,int st.player.y] <- Visited
+                mazing.Visited.[int st.player.x/2,int st.player.y] <- Visited
                 let reto, fao = move st Direction.RIGHT screen
                 if not(fao) then
                     failwith "Error"
@@ -258,9 +255,9 @@ let AutoResolver st screen =
         if not stop then
             //controllo la possibilità di spostarmi a sinistra e di non esserci gia andato
             let dxl, dyl = trymove st Direction.LEFT 
-            if (dxl,dyl)<>(0.,0.) && (Vis.[(int st.player.x + int dxl)/2,int st.player.y + int dyl] <> Visited) then
+            if (dxl,dyl)<>(0.,0.) && (mazing.Visited.[(int st.player.x + int dxl)/2,int st.player.y + int dyl] <> Visited) then
                 //Thread.Sleep(wait)
-                Vis.[int st.player.x/2,int st.player.y] <- Visited
+                mazing.Visited.[int st.player.x/2,int st.player.y] <- Visited
                 let reto, fao = move st Direction.LEFT screen
                 if not(fao) then
                     failwith "Error"
@@ -273,9 +270,9 @@ let AutoResolver st screen =
         if not stop then
             //controllo la possibilità di spostarmi in su e di non esserci gia andato
             let dxu, dyu = trymove st Direction.UP 
-            if (dxu,dyu)<>(0.,0.) && (Vis.[(int st.player.x+ int dxu)/2 ,int st.player.y + int dyu] <> Visited) then
+            if (dxu,dyu)<>(0.,0.) && (mazing.Visited.[(int st.player.x+ int dxu)/2 ,int st.player.y + int dyu] <> Visited) then
                 //Thread.Sleep(wait)
-                Vis.[(int st.player.x)/2,int st.player.y] <- Visited
+                mazing.Visited.[(int st.player.x)/2,int st.player.y] <- Visited
                 let reto, fao = move st Direction.UP screen
                 if not(fao) then
                     failwith "Error"
