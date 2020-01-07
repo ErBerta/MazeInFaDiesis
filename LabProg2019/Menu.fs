@@ -1,7 +1,9 @@
 ﻿(*
-
-
+* LabProg2019 - Progetto di Programmazione a.a. 2019-20
+* Maze.fs: Maze Manager
+* (C) 2020 Group 10 - Elia Bertapelle (), Leonardo Piccolo (882351) @ Universita' Ca' Foscari di Venezia
 *)
+
 module LabProg2019.Menu
 
 open System

@@ -1,7 +1,7 @@
 ﻿(*
 * LabProg2019 - Progetto di Programmazione a.a. 2019-20
-* Maze.fs: maze
-* (C) 2019 Alvise Spano' @ Universita' Ca' Foscari di Venezia
+* Maze.fs: Maze Manager
+* (C) 2020 Group 10 - Elia Bertapelle (), Leonardo Piccolo (882351) @ Universita' Ca' Foscari di Venezia
 *)
 
 module LabProg2019.Maze
@@ -47,6 +47,8 @@ let H = 51
 let finex = W*2-4
 let finey = H-2
 
+let mutable killerPointx = 0
+let mutable killerPointy = 0
 
 //creazione del motore grafico
 let engine = new engine (2*W, H)
@@ -66,10 +68,11 @@ let generate (maze : Maze) : Maze =
     let isPossible (x,y) =
         x>0 && x < maze.Width-1 && y>0 && y<maze.Height-1
     
+    //Lista delle coordinate dei delle celle 'Wall' che son vicine a quella indicata (a distanza di 2) 
     let frontier (x,y) =
         [x-2,y; x+2,y; x,y-2; x,y+2] |> List.filter (fun (x,y) -> isPossible (x,y) && maze.Grid.[x,y] = Wall)
 
-    
+    //Lista delle coordinate dei delle celle 'Path' che son vicine a quella indicata (a distanza di 2) 
     let neighbor (x,y) =
         [x-2,y;x+2,y; x,y-2; x, y+2] |> List.filter (fun (x,y) -> isPossible (x,y) && maze.Grid.[x,y] = Path)
     
@@ -137,11 +140,12 @@ let generate (maze : Maze) : Maze =
 ///Generazione e del Labirinto
 let mazing = generate(initMaze W H)
 
-//gestione uscita "vittoria"
-let exit () = 
-    let rect= image.rectangle (11, 5, pixel.filled Color.Yellow, pixel.filled Color.Blue)
-    rect.draw_text("Vinto",3, 2, Color.Red, Color.Yellow)
-    ignore <| engine.create_and_register_sprite (rect, W-5, H/2, 5)
+//gestione messaggio uscita 
+let exit (outMessage: String) = 
+    let width = outMessage.Length + 6 
+    let rect= image.rectangle (width, 5, pixel.filled Color.Blue, pixel.filled Color.Yellow)
+    rect.draw_text(outMessage, 3, 2, Color.Red, Color.Yellow)
+    ignore <| engine.create_and_register_sprite (rect, W-(width/2), H/2, 5)
    
 ///Funzione suppporto per la creazione degli sprite chetengono traccia del percorso
 let creaPixPercorso st colore carattere z =
@@ -169,11 +173,17 @@ let my_update (key : ConsoleKeyInfo) (screen : wronly_raster) (st : state) =
     
     Log.msg  "(%A, %A)" (st.player.x) (st.player.y)
 
+    //EASTER EGG - Killer point
+    if st.player.x = float (killerPointx*2) && st.player.y = float killerPointy then 
+        //st.player.clear
+        //st.arrived.clear
+        exit "Surprise! You're die! Game Over"
+        st, true
     //controllo se è arrivato
-    if st.player.x = float finex && st.player.y = float finey then 
+    else if st.player.x = float finex && st.player.y = float finey then 
         st.player.clear
         st.arrived.clear
-        exit ()
+        exit "Hai vinto!"
         st, true
     else
         st, key.KeyChar = 'q'
@@ -334,7 +344,7 @@ let main (gm: Config.GameMod) =
     //creazione e registrazione panel per mostrare le info
     let InfoPanel = engine.create_and_register_sprite (image.rectangle (W*2, 1, pixel.filled Color.White, pixel.filled Color.White),0,0,4)
     //definizione dei tipi di pixel per il giocatore e dell'arrivo
-    let pixGiocatore = pixel.create(Config.wall_pixel_char, Color.Red)
+    let pixGiocatore = pixel.create(Config.wall_pixel_char, Color.Blue)
     let pixArrivo = pixel.create(Config.wall_pixel_char, Color.Yellow)
     //creazione e registrazione sprite del giocatore e dell'arrivo
     let player = engine.create_and_register_sprite (image.rectangle (2, 1, pixGiocatore), 2, 1, 2)
@@ -346,6 +356,11 @@ let main (gm: Config.GameMod) =
         lab = lab
         arrived = arrive
     }
+
+     while mazing.Grid.[ killerPointx,killerPointy]<> Cell.Path do 
+        killerPointx <- rng.Next (mazing.Width-1) 
+        killerPointy <- rng.Next (mazing.Height-1)
+   
 
     //start engine
     if gm = Config.GameMod.Auto then
