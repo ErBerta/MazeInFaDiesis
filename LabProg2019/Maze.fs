@@ -1,7 +1,7 @@
 ﻿(*
 * LabProg2019 - Progetto di Programmazione a.a. 2019-20
 * Maze.fs: Maze Manager
-* (C) 2020 Group 10 - Elia Bertapelle (), Leonardo Piccolo (882351) @ Universita' Ca' Foscari di Venezia
+* (C) 2020 Group 10 - Elia Bertapelle (881359), Leonardo Piccolo (882351) @ Universita' Ca' Foscari di Venezia
 *)
 
 module LabProg2019.Maze
@@ -10,7 +10,7 @@ open System
 open External
 open Engine
 open Gfx
-open  System.Threading
+open System.Threading
 
 type CharInfo with
     static member wall = pixel.create (Config.wall_pixel_char, Color.White)
@@ -51,7 +51,7 @@ let mutable killerPointx = 0
 let mutable killerPointy = 0
 
 //creazione del motore grafico
-let engine = new engine (2*W, H)
+let mutable engine = new engine (2*W, H)
 
 //inizializza tutta la matrice MAZE a "muro"
 let initMaze dx dy = 
@@ -138,14 +138,14 @@ let generate (maze : Maze) : Maze =
 
 
 ///Generazione e del Labirinto
-let mazing = generate(initMaze W H)
+let mutable mazing = generate(initMaze W H)
 
 //gestione messaggio uscita 
-let exit (outMessage: String) = 
+let exit (outMessage: String) (z:int) = 
     let width = outMessage.Length + 6 
     let rect= image.rectangle (width, 5, pixel.filled Color.Blue, pixel.filled Color.Yellow)
     rect.draw_text(outMessage, 3, 2, Color.Red, Color.Yellow)
-    ignore <| engine.create_and_register_sprite (rect, W-(width/2), H/2, 5)
+    ignore <| engine.create_and_register_sprite (rect, W-(width/2), H/2, z)
    
 ///Funzione suppporto per la creazione degli sprite chetengono traccia del percorso
 let creaPixPercorso st colore carattere z =
@@ -177,13 +177,13 @@ let my_update (key : ConsoleKeyInfo) (screen : wronly_raster) (st : state) =
     if st.player.x = float (killerPointx*2) && st.player.y = float killerPointy then 
         //st.player.clear
         //st.arrived.clear
-        exit "Surprise! You're die! Game Over"
+        exit "Surprise!_You're_die!_Game_Over" 6
         st, true
     //controllo se è arrivato
     else if st.player.x = float finex && st.player.y = float finey then 
         st.player.clear
         st.arrived.clear
-        exit "Hai vinto!"
+        exit "Hai_vinto!" 5
         st, true
     else
         st, key.KeyChar = 'q'
@@ -310,13 +310,15 @@ let auto_start (key : ConsoleKeyInfo) (screen : wronly_raster) (st : state) : (s
     match key.KeyChar with 
     | 's' -> 
         AutoResolver st screen
-        st, true
+        st, false
     | 'q' -> st, true
     | _   -> st, false
 
 
 ///Funzione di avvio del labirinto. Necessario fornire la modalità di gioco
 let main (gm: Config.GameMod) =
+    engine <- new engine (2*W, H)
+    mazing <- generate(initMaze W H)
     ///convertirore della griglia del labirinto generato e raddoppio delle pareti in orizzontale
     let maz (grid: Maze): pixel[] = 
         //creo un'array vuoto 
