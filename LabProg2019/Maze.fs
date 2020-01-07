@@ -26,7 +26,7 @@ type state = {
 //Definizione tipi di supporto
 type Direction = | LEFT | RIGHT | UP | DOWN | NULL
 type Visit = Visited | NotVisited
-type Cell = | Muro | Passaggio
+type Cell = | Wall | Path
 
 type Maze = { 
     Grid : Cell[,]
@@ -54,7 +54,7 @@ let engine = new engine (2*W, H)
 //inizializza tutta la matrice MAZE a "muro"
 let initMaze dx dy = 
     { 
-        Grid = Array2D.init dx dy (fun _ _ -> Muro) 
+        Grid = Array2D.init dx dy (fun _ _ -> Wall) 
         Width = dx
         Height = dy
         Visited = Array2D.init W H (fun _ _ -> NotVisited)
@@ -67,11 +67,11 @@ let generate (maze : Maze) : Maze =
         x>0 && x < maze.Width-1 && y>0 && y<maze.Height-1
     
     let frontier (x,y) =
-        [x-2,y; x+2,y; x,y-2; x,y+2] |> List.filter (fun (x,y) -> isPossible (x,y) && maze.Grid.[x,y] = Muro)
+        [x-2,y; x+2,y; x,y-2; x,y+2] |> List.filter (fun (x,y) -> isPossible (x,y) && maze.Grid.[x,y] = Wall)
 
     
     let neighbor (x,y) =
-        [x-2,y;x+2,y; x,y-2; x, y+2] |> List.filter (fun (x,y) -> isPossible (x,y) && maze.Grid.[x,y] = Passaggio)
+        [x-2,y;x+2,y; x,y-2; x, y+2] |> List.filter (fun (x,y) -> isPossible (x,y) && maze.Grid.[x,y] = Path)
     
 
     ///Generatore di coordinate valide random
@@ -103,7 +103,7 @@ let generate (maze : Maze) : Maze =
         let pickedIndex = rng.Next(neighbors.Length)
         let xn,yn = neighbors.[pickedIndex]
         let xb,yb = getMiddleCell (x,y) (xn,yn)
-        maze.Grid.[xb,yb] <- Passaggio
+        maze.Grid.[xb,yb] <- Path
         ()
     
     let rec extend front =
@@ -112,7 +112,7 @@ let generate (maze : Maze) : Maze =
         | _ ->
             let pickedIndex = rng.Next(front.Length)
             let xf,yf = front.[pickedIndex]
-            maze.Grid.[xf,yf] <- Passaggio
+            maze.Grid.[xf,yf] <- Path
             connectRandomNeighbor (xf,yf)
             extend ((front |> removeAt pickedIndex) @ frontier (xf,yf))
 
@@ -128,7 +128,7 @@ let generate (maze : Maze) : Maze =
     
 
     let x,y = getInitCell (randomCell())
-    maze.Grid.[x,y] <- Passaggio
+    maze.Grid.[x,y] <- Path
     extend (frontier (x,y))
     
     maze
@@ -151,7 +151,7 @@ let creaPixPercorso st colore carattere z =
 //gestione movimenti modalita' interattiva
 let my_update (key : ConsoleKeyInfo) (screen : wronly_raster) (st : state) =
     let isWall (x,y) =
-        if mazing.Grid.[int (st.player.x / 2. + x), int (st.player.y + y)] = Passaggio then 2.*x,y else 0.,0.
+        if mazing.Grid.[int (st.player.x / 2. + x), int (st.player.y + y)] = Path then 2.*x,y else 0.,0.
     
     let dx, dy =
         match key.KeyChar with 
@@ -184,7 +184,7 @@ let AutoResolver st screen =
     ///Funzione per testare se è possibile spostarsi nella posizione specificata
     let trymove (stat:state) (direction:Direction) =
         let isWall (x,y) =
-            if mazing.Grid.[int (stat.player.x / 2. + x), int (stat.player.y + y)] = Passaggio then 2.*x,y else 0.,0.
+            if mazing.Grid.[int (stat.player.x / 2. + x), int (stat.player.y + y)] = Path then 2.*x,y else 0.,0.
 
         let ret =
                 match direction with
@@ -316,8 +316,8 @@ let main (gm: Config.GameMod) =
             (fun y x cell ->
                 let c = 
                     match cell with
-                    | Muro -> pixel.wall
-                    | Passaggio -> pixel.path
+                    | Wall -> pixel.wall
+                    | Path -> pixel.path
                 if x<>W || y<>H then 
                     //calcolo della posizione nell'array, date lo coordinete della matrice
                     let pos = x*W+y
@@ -330,21 +330,21 @@ let main (gm: Config.GameMod) =
   
     //creazione degli sprite
     //creazione e registrazione dello sprite del labirinto
-    let labirinto = engine.create_and_register_sprite (new image (W*2,H,(maz mazing)), 0, 0, 0)
+    let lab = engine.create_and_register_sprite (new image (W*2,H,(maz mazing)), 0, 0, 0)
     //creazione e registrazione panel per mostrare le info
     let InfoPanel = engine.create_and_register_sprite (image.rectangle (W*2, 1, pixel.filled Color.White, pixel.filled Color.White),0,0,4)
     //definizione dei tipi di pixel per il giocatore e dell'arrivo
     let pixGiocatore = pixel.create(Config.wall_pixel_char, Color.Red)
     let pixArrivo = pixel.create(Config.wall_pixel_char, Color.Yellow)
     //creazione e registrazione sprite del giocatore e dell'arrivo
-    let giocatore = engine.create_and_register_sprite (image.rectangle (2, 1, pixGiocatore), 2, 1, 2)
-    let arrivo = engine.create_and_register_sprite (image.rectangle (2, 1, pixArrivo), finex, finey, 2)
+    let player = engine.create_and_register_sprite (image.rectangle (2, 1, pixGiocatore), 2, 1, 2)
+    let arrive = engine.create_and_register_sprite (image.rectangle (2, 1, pixArrivo), finex, finey, 2)
 
     // initialize state
     let st0 = { 
-        player = giocatore
-        lab = labirinto
-        arrived = arrivo
+        player = player
+        lab = lab
+        arrived = arrive
     }
 
     //start engine
