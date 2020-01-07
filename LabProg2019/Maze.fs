@@ -157,6 +157,9 @@ let my_update (key : ConsoleKeyInfo) (screen : wronly_raster) (st : state) =
     let isWall (x,y) =
         if mazing.Grid.[int (st.player.x / 2. + x), int (st.player.y + y)] = Path then 2.*x,y else 0.,0.
     
+    //aggiornamento della traccia del percorso
+    creaPixPercorso st Color.Cyan Config.filled_pixel_char 2
+
     let dx, dy =
         match key.KeyChar with 
         | 'w' -> isWall(0.,-1.)
@@ -167,11 +170,8 @@ let my_update (key : ConsoleKeyInfo) (screen : wronly_raster) (st : state) =
 
     //spostamento effettivo del player
     st.player.move_by (dx, dy)
-
-    //aggiornamento della traccia del percorso
-    creaPixPercorso st Color.Cyan Config.filled_pixel_char 2
     
-    Log.msg  "(%A, %A)" (st.player.x) (st.player.y)
+    Log.msg  "(%A, %A)" (st.player.x/2.) (st.player.y)
 
     //EASTER EGG - Killer point
     if st.player.x = float (killerPointx*2) && st.player.y = float killerPointy then 
@@ -181,8 +181,8 @@ let my_update (key : ConsoleKeyInfo) (screen : wronly_raster) (st : state) =
         st, true
     //controllo se è arrivato
     else if st.player.x = float finex && st.player.y = float finey then 
-        st.player.clear
-        st.arrived.clear
+        //st.player.clear
+        //st.arrived.clear
         exit "Hai_vinto!" 5
         st, true
     else
@@ -241,7 +241,7 @@ let AutoResolver st screen =
                 let reto, fao = move st Direction.DOWN screen
                 if not(fao) then
                     failwith "Error"
-                Log.msg  "(%A, %A)" (st.player.x) (st.player.y)
+                Log.msg  "(%A, %A)" (st.player.x/2.) (st.player.y)
                 if not reto then
                     research st screen (dxd,dyd)
                 else
@@ -256,7 +256,7 @@ let AutoResolver st screen =
                 let reto, fao = move st Direction.RIGHT screen
                 if not(fao) then
                     failwith "Error"
-                Log.msg  "(%A, %A)" (st.player.x) (st.player.y)
+                Log.msg  "(%A, %A)" (st.player.x/2.) (st.player.y)
                 if not reto then
                     research st screen (dxr,dyr)
                 else
@@ -271,7 +271,7 @@ let AutoResolver st screen =
                 let reto, fao = move st Direction.LEFT screen
                 if not(fao) then
                     failwith "Error"
-                Log.msg  "(%A, %A)" (st.player.x) (st.player.y)
+                Log.msg  "(%A, %A)" (st.player.x/2.) (st.player.y)
                 if not reto then
                     research st screen (dxl,dyl)
                 else
@@ -286,7 +286,7 @@ let AutoResolver st screen =
                 let reto, fao = move st Direction.UP screen
                 if not(fao) then
                     failwith "Error"
-                Log.msg  "(%A, %A)" (st.player.x) (st.player.y)
+                Log.msg  "(%A, %A)" (st.player.x/2.) (st.player.y)
                 if not reto then
                     research st screen (dxu,dyu)
                 else
@@ -358,12 +358,7 @@ let main (gm: Config.GameMod) =
         lab = lab
         arrived = arrive
     }
-
-     while mazing.Grid.[ killerPointx,killerPointy]<> Cell.Path do 
-        killerPointx <- rng.Next (mazing.Width-1) 
-        killerPointy <- rng.Next (mazing.Height-1)
    
-
     //start engine
     if gm = Config.GameMod.Auto then
         let instruction = "Press 's' to start the automatic resolver, 'q' to quit"
@@ -371,7 +366,15 @@ let main (gm: Config.GameMod) =
         engine.loop_on_key auto_start st0 
         let instruction = "Press any key to exit..."
         InfoPanel.draw_text (instruction, 2, 0, Color.Red, Color.White)
-    else
+    else if gm = Config.GameMod.Player then
+        let instruction = "Use W^ A< Sv D> to move your player. Press 'q' to exit."
+        InfoPanel.draw_text (instruction, 2, 0, Color.Red, Color.White)
+        engine.loop_on_key my_update st0
+    else 
+        while mazing.Grid.[ killerPointx,killerPointy]<> Cell.Path do 
+            killerPointx <- rng.Next (mazing.Width-1) 
+            killerPointy <- rng.Next (mazing.Height-1)
+        Log.msg "Killer point on (X: %A, Y: %A)" killerPointx killerPointy
         let instruction = "Use W^ A< Sv D> to move your player. Press 'q' to exit."
         InfoPanel.draw_text (instruction, 2, 0, Color.Red, Color.White)
         engine.loop_on_key my_update st0
