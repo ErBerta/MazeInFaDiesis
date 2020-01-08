@@ -37,7 +37,14 @@ let main_game () =
         | Config.GameMod.Player | Config.GameMod.Auto | Config.GameMod.MazeEasterEgg -> Maze.main (Menu.gameMod)
         | Config.GameMod.Game2 -> failwith "funzione non implementata"
         | Config.GameMod.Exit -> exit 0
-    
+    //potremmo aggiungere altre funzionalità
+    (*
+        * Richiesta della conferma di uscita in caso di pressione del tasto 'q'
+        * Altri giochi
+         * Snake
+         * Tris
+         * Forza 4 (Magari controllando solo in orizzontale e in verticale)
+    *)
     0
 
 // log mode (server)

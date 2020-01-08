@@ -171,7 +171,7 @@ let my_update (key : ConsoleKeyInfo) (screen : wronly_raster) (st : state) =
     //spostamento effettivo del player
     st.player.move_by (dx, dy)
     
-    Log.msg  "(%A, %A)" (st.player.x/2.) (st.player.y)
+    Log.msg  "Move to (%A, %A)" (st.player.x/2.) (st.player.y)
 
     //EASTER EGG - Killer point
     if st.player.x = float (killerPointx*2) && st.player.y = float killerPointy then 
@@ -241,7 +241,7 @@ let AutoResolver st screen =
                 let reto, fao = move st Direction.DOWN screen
                 if not(fao) then
                     failwith "Error"
-                Log.msg  "(%A, %A)" (st.player.x/2.) (st.player.y)
+                Log.msg  "Down (%A, %A)" (st.player.x/2.) (st.player.y)
                 if not reto then
                     research st screen (dxd,dyd)
                 else
@@ -256,7 +256,7 @@ let AutoResolver st screen =
                 let reto, fao = move st Direction.RIGHT screen
                 if not(fao) then
                     failwith "Error"
-                Log.msg  "(%A, %A)" (st.player.x/2.) (st.player.y)
+                Log.msg  "Right (%A, %A)" (st.player.x/2.) (st.player.y)
                 if not reto then
                     research st screen (dxr,dyr)
                 else
@@ -271,7 +271,7 @@ let AutoResolver st screen =
                 let reto, fao = move st Direction.LEFT screen
                 if not(fao) then
                     failwith "Error"
-                Log.msg  "(%A, %A)" (st.player.x/2.) (st.player.y)
+                Log.msg  "Left (%A, %A)" (st.player.x/2.) (st.player.y)
                 if not reto then
                     research st screen (dxl,dyl)
                 else
@@ -286,7 +286,7 @@ let AutoResolver st screen =
                 let reto, fao = move st Direction.UP screen
                 if not(fao) then
                     failwith "Error"
-                Log.msg  "(%A, %A)" (st.player.x/2.) (st.player.y)
+                Log.msg  "Up (%A, %A)" (st.player.x/2.) (st.player.y)
                 if not reto then
                     research st screen (dxu,dyu)
                 else
