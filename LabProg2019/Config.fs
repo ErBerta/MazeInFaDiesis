@@ -28,4 +28,4 @@ let log_warn_color = Color.Yellow
 let log_error_color = Color.Red
 let log_debug_color = Color.Cyan
 
-type GameMod = | Auto | Player | MazeEasterEgg | Exit | Game2
+type GameMod = | Auto | OnePlayer | MazeEasterEgg | Exit | Game2 | MultiPlayer

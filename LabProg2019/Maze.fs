@@ -314,6 +314,14 @@ let auto_start (key : ConsoleKeyInfo) (screen : wronly_raster) (st : state) : (s
     | 'q' -> st, true
     | _   -> st, false
 
+let multi_update (key : ConsoleKeyInfo) (screen : wronly_raster) ((st0 : state),(st1 : state)) : (state*state*bool) =
+    let s,r=
+        match key.KeyChar with 
+        | ('a' | 's' |'d' |'w') -> (my_update key screen st0)
+        | _ -> st0, false
+        //   | ('a' | 's' |'d' |'w') -> my_update key screen st1
+    s, st0, false
+  
 
 ///Funzione di avvio del labirinto. Necessario fornire la modalità di gioco
 let main (gm: Config.GameMod) =
@@ -360,17 +368,33 @@ let main (gm: Config.GameMod) =
     }
    
     //start engine
-    if gm = Config.GameMod.Auto then
+    match gm with
+    | Config.GameMod.Auto ->
         let instruction = "Press 's' to start the automatic resolver, 'q' to quit"
         InfoPanel.draw_text (instruction, 2, 0, Color.Red, Color.White)
         engine.loop_on_key auto_start st0 
         let instruction = "Press any key to exit..."
         InfoPanel.draw_text (instruction, 2, 0, Color.Red, Color.White)
-    else if gm = Config.GameMod.Player then
+    | Config.GameMod.OnePlayer ->
         let instruction = "Use W^ A< Sv D> to move your player. Press 'q' to exit."
         InfoPanel.draw_text (instruction, 2, 0, Color.Red, Color.White)
         engine.loop_on_key my_update st0
-    else 
+    | Config.GameMod.MultiPlayer -> 
+        let instruction = "Use W^ A< Sv D> to move player 1. Use Direction arrow to move player 2. Press 'q' to exit."
+        let pixGiocatore1 = pixel.create(Config.wall_pixel_char, Color.Blue)
+        let pixArrivo1 = pixel.create(Config.wall_pixel_char, Color.Yellow)
+        let player1 = engine.create_and_register_sprite (image.rectangle (2, 1, pixGiocatore), W*2-2, 1, 2)
+        let arrive1 = engine.create_and_register_sprite (image.rectangle (2, 1, pixArrivo), 2, finey, 2)
+
+        let st1 = { 
+            player = player1
+            lab = lab
+            arrived = arrive1
+        }
+        InfoPanel.draw_text (instruction, 2, 0, Color.Red, Color.White)
+        //engine.loop_on_key multi_update (st0,st1)
+        engine.loop_on_key my_update st0
+    | _ -> 
         while mazing.Grid.[ killerPointx,killerPointy]<> Cell.Path do 
             killerPointx <- rng.Next (mazing.Width-1) 
             killerPointy <- rng.Next (mazing.Height-1)

@@ -40,10 +40,10 @@ let main (W,H) =
         //controllo la posizione y della scelta per individuare la modalita' del gioco da avviare
         if key.KeyChar = 'p' then
             match (st.menuscelta.y - 1.) with
-            | 1. -> gameMod <- Config.GameMod.Player
+            | 1. -> gameMod <- Config.GameMod.OnePlayer
             | 2. -> gameMod <- Config.GameMod.Auto
             | 3. -> gameMod <- Config.GameMod.MazeEasterEgg
-            | 4. -> gameMod <- Config.GameMod.Game2
+            | 4. -> gameMod <- Config.GameMod.MultiPlayer
             | _ -> failwith "errore"
 
         //salvo lo stato 'exit' per interpretarlo correttamente una volta arrivato al main
