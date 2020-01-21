@@ -17,17 +17,17 @@
 mono_crash.*
 
 # Build results
-LabProg2019/[Dd]ebug/
-LabProg2019/[Dd]ebugPublic/
-LabProg2019/[Rr]elease/
-LabProg2019/[Rr]eleases/
-LabProg2019/x64/
-LabProg2019/x86/
-LabProg2019/[Aa][Rr][Mm]/
-LabProg2019/[Aa][Rr][Mm]64/
-LabProg2019/bld/
-LabProg2019/[Bb]in/
-LabProg2019/[Oo]bj/
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]in/
+[Oo]bj/
 LabProg2019/[Ll]og/
 LabProg2019/[Ll]ogs/
 
@@ -534,7 +534,7 @@ publish/
 # Publish Web Output
 *.[Pp]ublish.xml
 *.azurePubxml
-# TODO: Comment the next line if you want to checkin your web deploy settings 
+# TODO: Comment the next line if you want to checkin your web deploy settings
 # but database connection strings (with potential passwords) will be unencrypted
 *.pubxml
 *.publishproj
@@ -582,7 +582,7 @@ ClientBin/
 node_modules/
 orleans.codegen.cs
 
-# Since there are multiple workflows, uncomment next line to ignore bower_components 
+# Since there are multiple workflows, uncomment next line to ignore bower_components
 # (https://github.com/github/gitignore/pull/1529#issuecomment-104372622)
 #bower_components/
 
@@ -801,10 +801,3 @@ bower_components
 .bower-cache
 .bower-registry
 .bower-tmp
-
-
-### WebSharper ###
-Scripts/
-*.exe
-*.cache
-*.pdb

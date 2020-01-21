@@ -21,7 +21,7 @@ type CharInfo with
 type state = {
     player : sprite
     lab : sprite
-    arrived : sprite
+    finish : sprite
     path_color: Color
 }
 [< NoEquality; NoComparison >]
@@ -29,8 +29,8 @@ type state_multi = {
     player : sprite
     player1 : sprite
     lab : sprite
-    arrived : sprite
-    arrived1 : sprite
+    finish : sprite
+    finish1 : sprite
     path_color: Color
     path_color1: Color
 }
@@ -62,6 +62,9 @@ let mutable killerPointy = 0
 
 //creazione del motore grafico
 let mutable engine = new engine (2*W, H)
+
+//flag per identificare l'arrivo
+let mutable stop = false
 
 //inizializza tutta la matrice MAZE a "muro"
 let initMaze dx dy = 
@@ -187,7 +190,7 @@ let my_update (key : ConsoleKeyInfo) (screen : wronly_raster) (st : state) =
         exit "Surprise!_You're_die!_Game_Over" 6
         st, true
     //controllo se è arrivato
-    else if st.player.x = st.arrived.x && st.player.y = st.arrived.y then 
+    else if st.player.x = st.finish.x && st.player.y = st.finish.y then 
         //st.player.clear<
         //st.arrived.clear
         exit "Hai_vinto!" 5
@@ -231,8 +234,7 @@ let AutoResolver st screen =
         else 
             (ret, true)
     
-    //flag per identificare l'arrivo
-    let mutable stop = false
+
 
     ///funzione ricorsiva per la ricerca che tiene traccia delle stato, dello schermo e dell'ultima azione svolta
     let rec research (st:state) (screen: wronly_raster) (dx,dy) =
@@ -320,13 +322,13 @@ let multi_update (key : ConsoleKeyInfo) (screen : wronly_raster) (st:state_multi
     let st0 = { 
         player = st.player
         lab = st.lab
-        arrived = st.arrived
+        finish = st.finish
         path_color = st.path_color
     }
     let st1 = { 
         player = st.player1
         lab = st.lab
-        arrived = st.arrived1
+        finish = st.finish
         path_color = st.path_color1
     }
     let s,r=
@@ -372,19 +374,19 @@ let main (gm: Config.GameMod) (mW,mH) =
     //creazione e registrazione dello sprite del labirinto
     let lab = engine.create_and_register_sprite (new image (W*2,H,(maz mazing)), 0, 0, 0)
     //creazione e registrazione panel per mostrare le info
-    let InfoPanel = engine.create_and_register_sprite (image.rectangle (W*2, 1, pixel.filled Color.White, pixel.filled Color.White),0,0,4)
+    let infoPanel = engine.create_and_register_sprite (image.rectangle (W*2, 1, pixel.filled Color.White, pixel.filled Color.White),0,0,4)
     //definizione dei tipi di pixel per il giocatore e dell'arrivo
-    let pixGiocatore = pixel.create(Config.wall_pixel_char, Color.Blue)
-    let pixArrivo = pixel.create(Config.wall_pixel_char, Color.Yellow)
+    let pixPlayer = pixel.create(Config.wall_pixel_char, Color.Blue)
+    let pixEnd = pixel.create(Config.wall_pixel_char, Color.Yellow)
     //creazione e registrazione sprite del giocatore e dell'arrivo
-    let player = engine.create_and_register_sprite (image.rectangle (2, 1, pixGiocatore), 2, 1, 2)
-    let arrive = engine.create_and_register_sprite (image.rectangle (2, 1, pixArrivo), W*2-4, H-2, 2)
+    let player = engine.create_and_register_sprite (image.rectangle (2, 1, pixPlayer), 2, 1, 2)
+    let finish = engine.create_and_register_sprite (image.rectangle (2, 1, pixEnd), W*2-4, H-2, 2)
 
     //inizializzazione variabile state
     let st0 = { 
         player = player
         lab = lab
-        arrived = arrive
+        finish = finish
         path_color = Color.Cyan
     }
    
@@ -392,31 +394,31 @@ let main (gm: Config.GameMod) (mW,mH) =
     match gm with
     | Config.GameMod.Auto ->
         let instruction = "Press 's' to start the automatic resolver, 'q' to quit"
-        InfoPanel.draw_text (instruction, 2, 0, Color.Red, Color.White)
+        infoPanel.draw_text (instruction, 2, 0, Color.Red, Color.White)
         engine.loop_on_key auto_start st0 
         let instruction = "Press any key to exit..."
-        InfoPanel.draw_text (instruction, 2, 0, Color.Red, Color.White)
+        infoPanel.draw_text (instruction, 2, 0, Color.Red, Color.White)
     | Config.GameMod.OnePlayer ->
         let instruction = "Use W^ A< Sv D> to move your player. Press 'q' to exit."
-        InfoPanel.draw_text (instruction, 2, 0, Color.Red, Color.White)
+        infoPanel.draw_text (instruction, 2, 0, Color.Red, Color.White)
         engine.loop_on_key my_update st0
     | Config.GameMod.MultiPlayer -> 
         let instruction = "Use W^ A< Sv D> to move player 1. Use I^ J< Kv L>  to move player 2. Press 'q' to exit."
-        let pixGiocatore1 = pixel.create(Config.wall_pixel_char, Color.Green)
+        let pixPlayer1 = pixel.create(Config.wall_pixel_char, Color.Green)
         let pixArrivo1 = pixel.create(Config.wall_pixel_char, Color.Red)
-        let player1 = engine.create_and_register_sprite (image.rectangle (2, 1, pixGiocatore1), W*2-4, 1, 2)
-        let arrive1 = engine.create_and_register_sprite (image.rectangle (2, 1, pixArrivo1), 2, H-2, 2)
+        let player1 = engine.create_and_register_sprite (image.rectangle (2, 1, pixPlayer1), W*2-4, 1, 2)
+        let finish1 = engine.create_and_register_sprite (image.rectangle (2, 1, pixArrivo1), 2, H-2, 2)
         let status = { 
             player = st0.player
             player1 = player1
             lab = lab
-            arrived = st0.arrived
-            arrived1 = arrive1
+            finish = st0.finish
+            finish1 = finish1
             path_color = st0.path_color
             path_color1 = Color.Blue
         }
         
-        InfoPanel.draw_text (instruction, 2, 0, Color.Red, Color.White)
+        infoPanel.draw_text (instruction, 2, 0, Color.Red, Color.White)
         engine.loop_on_key multi_update status
     | _ -> 
         while mazing.Grid.[ killerPointx,killerPointy]<> Cell.Path do 
@@ -424,5 +426,5 @@ let main (gm: Config.GameMod) (mW,mH) =
             killerPointy <- rng.Next (mazing.Height-1)
         Log.msg "Killer point on (X: %A, Y: %A)" killerPointx killerPointy
         let instruction = "Use W^ A< Sv D> to move your player. Press 'q' to exit."
-        InfoPanel.draw_text (instruction, 2, 0, Color.Red, Color.White)
+        infoPanel.draw_text (instruction, 2, 0, Color.Red, Color.White)
         engine.loop_on_key my_update st0
