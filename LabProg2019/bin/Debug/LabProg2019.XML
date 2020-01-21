@@ -579,7 +579,7 @@
  The order of operations for each frame are: clear buffer; render sprites; call user update function; commit frame; switch buffer.
 </summary>
 </member>
-<member name="M:LabProg2019.Maze.main(LabProg2019.Config.GameMod)">
+<member name="M:LabProg2019.Maze.main(LabProg2019.Config.GameMod,System.Int32,System.Int32)">
 <summary>
 Funzione di avvio del labirinto. Necessario fornire la modalità di gioco
 </summary>

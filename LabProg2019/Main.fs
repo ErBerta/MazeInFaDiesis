@@ -34,9 +34,11 @@ let main_game () =
         Menu.main (50,25)
         //in base alla modalita' di menu selezionata gestisco l'avvio
         match Menu.gameMod with
-        | Config.GameMod.OnePlayer | Config.GameMod.Auto | Config.GameMod.MazeEasterEgg | Config.GameMod.MultiPlayer -> Maze.main (Menu.gameMod)
+        | Config.GameMod.OnePlayer | Config.GameMod.Auto | Config.GameMod.MazeEasterEgg | Config.GameMod.MultiPlayer -> Maze.main (Menu.gameMod) (Menu.gameRes)
         | Config.GameMod.Game2 -> failwith "funzione non implementata"
         | Config.GameMod.Exit -> exit 0
+
+
     //potremmo aggiungere altre funzionalità
     (*
         * Richiesta della conferma di uscita in caso di pressione del tasto 'q'

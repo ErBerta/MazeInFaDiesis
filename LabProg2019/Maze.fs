@@ -40,8 +40,7 @@ type Maze = {
 let rng = new System.Random()
 
 //definizione dimensione del labirinto
-let W = 51
-let H = 51
+let mutable W,H = 25,25
 
 //definizione coordinate dell'arrivo
 let finex = W*2-4
@@ -316,7 +315,9 @@ let multi_update (key : ConsoleKeyInfo) (screen : wronly_raster) ((st0 : state),
   
 
 ///Funzione di avvio del labirinto. Necessario fornire la modalità di gioco
-let main (gm: Config.GameMod) =
+let main (gm: Config.GameMod) (mW,mH) =
+    W <- mW
+    H <- mH
     engine <- new engine (2*W, H)
     mazing <- generate(initMaze W H)
     ///convertirore della griglia del labirinto generato e raddoppio delle pareti in orizzontale
