@@ -82,7 +82,7 @@ let main (W,H) = //Menu' principale
     //creo lo sfondo del menu' utilizzando un quadrato gia' supportato dal motore
     let menu = engine.create_and_register_sprite (image.rectangle (W, H/2, pixel.filled Color.Blue, pixel.filled Color.Yellow),0,0,1)
 
-    menu.draw_text("Game\n_1._Interactive_maze\n_2._Automatic_maze_resolver\n_3._Interactive_maze_with_special_funtions\n_4._\n\n\nUse_W^_Sv_to_move.\nPress_'p'_to_enter_or_'q'_to_quit\n", 2, 1, Color.Red, Color.Yellow)
+    menu.draw_text("Game\n_1._Interactive_maze\n_2._Automatic_maze_resolver\n_3._Interactive_maze_with_special_funtions\n_4._Multiplayer_maze\n\n\nUse_W^_Sv_to_move.\nPress_'p'_to_enter_or_'q'_to_quit\n", 2, 1, Color.Red, Color.Yellow)
     
     //creo lo sprite del menu' (un rettangolo colorato che si muove su e giu)
     let pixChoice = pixel.create(Config.wall_pixel_char, Color.Red)
