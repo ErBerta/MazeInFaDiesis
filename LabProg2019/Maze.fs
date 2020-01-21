@@ -24,6 +24,7 @@ type state = {
     arrived : sprite
     path_color: Color
 }
+
 [< NoEquality; NoComparison >]
 type state_multi = {
     player : sprite
@@ -34,6 +35,8 @@ type state_multi = {
     path_color: Color
     path_color1: Color
 }
+
+
 //Definizione tipi di supporto
 type Direction = | LEFT | RIGHT | UP | DOWN | NULL
 type Visit = Visited | NotVisited
@@ -50,7 +53,7 @@ type Maze = {
 //Istanziamento della classe random
 let rng = new System.Random()
 
-//definizione dimensione del labirinto
+//definizione dimensione del labirinto di default
 let mutable W,H = 25,25
 
 //definizione coordinate dell'arrivo
@@ -150,13 +153,19 @@ let generate (maze : Maze) : Maze =
 ///Generazione e del Labirinto
 let mutable mazing = generate(initMaze W H)
 
-//gestione messaggio uscita 
-let exit (outMessage: String) (z:int) = 
-    let width = outMessage.Length + 6 
+let wait_escape (key : ConsoleKeyInfo) (screen : wronly_raster) (st : state)=
+   match key.KeyChar with 
+   | 'q' -> st, true
+   | _ -> st,false
+
+let message (message: String) (z:int) st =
+    let width = message.Length + 6 
     let rect= image.rectangle (width, 5, pixel.filled Color.Blue, pixel.filled Color.Yellow)
-    rect.draw_text(outMessage, 3, 2, Color.Red, Color.Yellow)
+    rect.draw_text(message, 3, 2, Color.Red, Color.Yellow)
     ignore <| engine.create_and_register_sprite (rect, W-(width/2), H/2, z)
-   
+    engine.loop_on_key wait_escape st
+  
+
 ///Funzione suppporto per la creazione degli sprite chetengono traccia del percorso
 let creaPixPath (st:state) color char z =
     let pixpath = pixel.create(char, color)
@@ -182,15 +191,15 @@ let my_update (key : ConsoleKeyInfo) (screen : wronly_raster) (st : state) =
 
     //EASTER EGG - Killer point ~ funziona solo nella modalita' interattiva specifica
     if st.player.x = float (killerPointx*2) && st.player.y = float killerPointy then 
-        //st.player.clear
+        st.player.clear
         //st.arrived.clear
-        exit "Surprise!_You're_die!_Game_Over" 6
+        message "Surprise!_You're_die!_Game_Over" 6 st 
         st, true
     //controllo se è arrivato
     else if st.player.x = st.arrived.x && st.player.y = st.arrived.y then 
-        //st.player.clear<
-        //st.arrived.clear
-        exit "Hai_vinto!" 5
+        //st.player.clear
+        st.arrived.clear
+        message "End" 5 st
         st, true
     else
         st, key.KeyChar = 'q'
@@ -312,7 +321,7 @@ let AutoResolver st screen =
 let auto_start (key : ConsoleKeyInfo) (screen : wronly_raster) (st : state) : (state*bool) = 
     match key.KeyChar with 
     |'s'|'S' -> AutoResolver st screen
-                st, false
+                st, true
     |'q'|'Q' -> st, true
     | _   -> st, false
 
@@ -336,8 +345,14 @@ let multi_update (key : ConsoleKeyInfo) (screen : wronly_raster) (st:state_multi
         | 'l' | 'L' ->  my_update (new ConsoleKeyInfo('d', new ConsoleKey(),false, false, false )) screen st1
         | 'i' | 'I' ->  my_update (new ConsoleKeyInfo('w', new ConsoleKey(),false, false, false )) screen st1
         | 'k' | 'K' ->  my_update (new ConsoleKeyInfo('s', new ConsoleKey(),false, false, false )) screen st1
+        | 'q' -> st0, true
         | _ -> st0, false
         //   | ('a' | 's' |'d' |'w') -> my_update key screen st1
+    if r then
+        if (st.player.x,st.player.y) = (st.arrived.x,st.arrived.y) then
+            message "Il_player_1_ha_vinto!!" 6 st0
+        if (st.player1.x,st.player1.y) = (st.arrived1.x,st.arrived1.y) then
+            message  "Il_player_2_ha_vinto!!" 6 st1
     st, r
   
 
@@ -387,6 +402,9 @@ let main (gm: Config.GameMod) (mW,mH) =
         arrived = arrive
         path_color = Color.Cyan
     }
+
+    killerPointx <- 0
+    killerPointy <- 0
    
     //start engine
     match gm with
@@ -406,6 +424,7 @@ let main (gm: Config.GameMod) (mW,mH) =
         let pixArrivo1 = pixel.create(Config.wall_pixel_char, Color.Red)
         let player1 = engine.create_and_register_sprite (image.rectangle (2, 1, pixGiocatore1), W*2-4, 1, 2)
         let arrive1 = engine.create_and_register_sprite (image.rectangle (2, 1, pixArrivo1), 2, H-2, 2)
+
         let status = { 
             player = st0.player
             player1 = player1
@@ -413,11 +432,12 @@ let main (gm: Config.GameMod) (mW,mH) =
             arrived = st0.arrived
             arrived1 = arrive1
             path_color = st0.path_color
-            path_color1 = Color.Blue
+            path_color1 = Color.Yellow
         }
         
         InfoPanel.draw_text (instruction, 2, 0, Color.Red, Color.White)
         engine.loop_on_key multi_update status
+        
     | _ -> 
         while mazing.Grid.[ killerPointx,killerPointy]<> Cell.Path do 
             killerPointx <- rng.Next (mazing.Width-1) 

@@ -65,7 +65,7 @@ let updateResMenu (key : ConsoleKeyInfo) (screen : wronly_raster) (st : state) =
     //controllo la posizione y della scelta per individuare la modalita' del gioco da avviare
     if key.KeyChar = 'p' then
         match (st.choiceMenu.y - 1.) with
-        | 1. -> gameRes <- (9,9)
+        | 1. -> gameRes <- (15,15)
         | 2. -> gameRes <- (25,25)
         | 3. -> gameRes <- (51,51)
         | 4. -> gameRes <- (99,99)
@@ -102,7 +102,7 @@ let main (W,H) = //Menu' principale
         let st0 = {
             choiceMenu = choice
         }
-        menu.draw_text("Resolution\n_1._9*9\n_2._25*25\n_3._51*51\n_4._99*99\n\n\nUse_W^_Sv_to_move.\nPress_'p'_to_enter_or_'q'_to_quit\n", 2, 1, Color.Red, Color.Yellow)
+        menu.draw_text("Resolution\n_1._15*15\n_2._25*25\n_3._51*51\n_4._99*99\n\n\nUse_W^_Sv_to_move.\nPress_'p'_to_enter_or_'q'_to_quit\n", 2, 1, Color.Red, Color.Yellow)
         engine.loop_on_key updateResMenu st0
 
 
