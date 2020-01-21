@@ -148,32 +148,29 @@ let exit (outMessage: String) (z:int) =
     ignore <| engine.create_and_register_sprite (rect, W-(width/2), H/2, z)
    
 ///Funzione suppporto per la creazione degli sprite chetengono traccia del percorso
-let creaPixPercorso st colore carattere z =
-    let pixpercorso = pixel.create(carattere, colore)
-    ignore <| engine.create_and_register_sprite (image.rectangle (2, 1, pixpercorso), int (st.player.x), int (st.player.y), z)
+let creaPixPath st color char z =
+    let pixpath = pixel.create(char, color)
+    ignore <| engine.create_and_register_sprite (image.rectangle (2, 1, pixpath), int (st.player.x), int (st.player.y), z)
 
 //gestione movimenti modalita' interattiva
 let my_update (key : ConsoleKeyInfo) (screen : wronly_raster) (st : state) =
     let isWall (x,y) =
         if mazing.Grid.[int (st.player.x / 2. + x), int (st.player.y + y)] = Path then 2.*x,y else 0.,0.
-    
     //aggiornamento della traccia del percorso
-    creaPixPercorso st Color.Cyan Config.filled_pixel_char 2
-
+    creaPixPath st Color.Cyan Config.filled_pixel_char 2
     let dx, dy =
         match key.KeyChar with 
-        | 'w' -> isWall(0.,-1.)
-        | 's' -> isWall(0., 1.)
-        | 'a' -> isWall(-1., 0.)
-        | 'd' -> isWall(1., 0.)
+        | 'w'|'W' -> isWall(0.,-1.)
+        | 's'|'S' -> isWall(0., 1.)
+        | 'a'|'A' -> isWall(-1., 0.)
+        | 'd'|'D' -> isWall(1., 0.)
         | _   -> 0., 0.
-
     //spostamento effettivo del player
     st.player.move_by (dx, dy)
-    
+    //messaggi di log, utili in fase di debug
     Log.msg  "Move to (%A, %A)" (st.player.x/2.) (st.player.y)
 
-    //EASTER EGG - Killer point
+    //EASTER EGG - Killer point ~ funziona solo nella modalita' interattiva specifica
     if st.player.x = float (killerPointx*2) && st.player.y = float killerPointy then 
         //st.player.clear
         //st.arrived.clear
@@ -198,11 +195,11 @@ let AutoResolver st screen =
 
         let ret =
                 match direction with
-                | Direction.LEFT ->  isWall(-1., 0.)
-                | Direction.RIGHT ->  isWall(1., 0.)
-                | Direction.UP ->  isWall(0.,-1.)
-                | Direction.DOWN ->  isWall(0., 1.)
-                | Direction.NULL -> 0.,0.
+                | Direction.LEFT    ->  isWall(-1., 0.)
+                | Direction.RIGHT   ->  isWall(1., 0.)
+                | Direction.UP      ->  isWall(0.,-1.)
+                | Direction.DOWN    ->  isWall(0., 1.)
+                | Direction.NULL    ->  0.,0.
         ret
 
     ///Funzione che sposta il player dello stat verso la direzione indicata
@@ -212,11 +209,11 @@ let AutoResolver st screen =
         //sfrutto la my_update della versione interattiva per la gestione dei movimenti
         let st, ret =
                 match direction with
-                | Direction.LEFT ->  my_update (new ConsoleKeyInfo ('a', new ConsoleKey(),false, false, false )) screen stat
-                | Direction.RIGHT ->  my_update (new ConsoleKeyInfo('d', new ConsoleKey(),false, false, false )) screen stat
-                | Direction.UP ->  my_update (new ConsoleKeyInfo('w', new ConsoleKey(),false, false, false )) screen stat
-                | Direction.DOWN ->  my_update (new ConsoleKeyInfo('s', new ConsoleKey(),false, false, false )) screen stat
-                | Direction.NULL -> (stat, false)
+                | Direction.LEFT    ->  my_update (new ConsoleKeyInfo ('a', new ConsoleKey(),false, false, false )) screen stat
+                | Direction.RIGHT   ->  my_update (new ConsoleKeyInfo('d', new ConsoleKey(),false, false, false )) screen stat
+                | Direction.UP      ->  my_update (new ConsoleKeyInfo('w', new ConsoleKey(),false, false, false )) screen stat
+                | Direction.DOWN    ->  my_update (new ConsoleKeyInfo('s', new ConsoleKey(),false, false, false )) screen stat
+                | Direction.NULL    ->  (stat, false)
         //aggiornamento dello schermo
         engine.refresh st false
         if stat.player.x = dx && stat.player.y = dy then
@@ -235,7 +232,6 @@ let AutoResolver st screen =
             //controllo la possibilità di spostarmi in giù e di non esserci gia andato
             let dxd, dyd = trymove st Direction.DOWN 
             if (dxd,dyd)<>(0.,0.) && (mazing.Visited.[(int st.player.x+int dxd)/2,int st.player.y+ int dyd] <> Visited) then
-                //Thread.Sleep(wait)
                 //aggiorno la matrice 
                 mazing.Visited.[int st.player.x/2,int st.player.y] <- Visited
                 let reto, fao = move st Direction.DOWN screen
@@ -251,7 +247,6 @@ let AutoResolver st screen =
         //controllo la possibilità di spostarmi a destra e di non esserci gia andato
             let dxr, dyr = trymove st Direction.RIGHT
             if (dxr,dyr)<>(0.,0.) && (mazing.Visited.[(int st.player.x + int dxr)/2,int st.player.y + int dyr] <> Visited) then
-                //Thread.Sleep(wait)
                 mazing.Visited.[int st.player.x/2,int st.player.y] <- Visited
                 let reto, fao = move st Direction.RIGHT screen
                 if not(fao) then
@@ -266,7 +261,6 @@ let AutoResolver st screen =
             //controllo la possibilità di spostarmi a sinistra e di non esserci gia andato
             let dxl, dyl = trymove st Direction.LEFT 
             if (dxl,dyl)<>(0.,0.) && (mazing.Visited.[(int st.player.x + int dxl)/2,int st.player.y + int dyl] <> Visited) then
-                //Thread.Sleep(wait)
                 mazing.Visited.[int st.player.x/2,int st.player.y] <- Visited
                 let reto, fao = move st Direction.LEFT screen
                 if not(fao) then
@@ -281,7 +275,6 @@ let AutoResolver st screen =
             //controllo la possibilità di spostarmi in su e di non esserci gia andato
             let dxu, dyu = trymove st Direction.UP 
             if (dxu,dyu)<>(0.,0.) && (mazing.Visited.[(int st.player.x+ int dxu)/2 ,int st.player.y + int dyu] <> Visited) then
-                //Thread.Sleep(wait)
                 mazing.Visited.[(int st.player.x)/2,int st.player.y] <- Visited
                 let reto, fao = move st Direction.UP screen
                 if not(fao) then
@@ -294,7 +287,7 @@ let AutoResolver st screen =
 
         if not stop then
             //segno il pecorso come già visitato 2 volte
-            creaPixPercorso st Color.Red Config.filled_pixel_char 4
+            creaPixPath st Color.Red Config.filled_pixel_char 4
             //torno indietro
             st.player.move_by(-dx,-dy)
             Thread.Sleep(wait)
@@ -308,10 +301,9 @@ let AutoResolver st screen =
 ///Funzione per la gestione dell'avvio della risoluzione automatica
 let auto_start (key : ConsoleKeyInfo) (screen : wronly_raster) (st : state) : (state*bool) = 
     match key.KeyChar with 
-    | 's' -> 
-        AutoResolver st screen
-        st, false
-    | 'q' -> st, true
+    |'s'|'S' -> AutoResolver st screen
+                st, false
+    |'q'|'Q' -> st, true
     | _   -> st, false
 
 
@@ -352,7 +344,7 @@ let main (gm: Config.GameMod) =
     let player = engine.create_and_register_sprite (image.rectangle (2, 1, pixGiocatore), 2, 1, 2)
     let arrive = engine.create_and_register_sprite (image.rectangle (2, 1, pixArrivo), finex, finey, 2)
 
-    // initialize state
+    //inizializzazione variabile state
     let st0 = { 
         player = player
         lab = lab

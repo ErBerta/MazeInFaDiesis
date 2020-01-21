@@ -17,19 +17,19 @@
 mono_crash.*
 
 # Build results
-[Dd]ebug/
-[Dd]ebugPublic/
-[Rr]elease/
-[Rr]eleases/
-x64/
-x86/
-[Aa][Rr][Mm]/
-[Aa][Rr][Mm]64/
-bld/
-[Bb]in/
-[Oo]bj/
-[Ll]og/
-[Ll]ogs/
+LabProg2019/[Dd]ebug/
+LabProg2019/[Dd]ebugPublic/
+LabProg2019/[Rr]elease/
+LabProg2019/[Rr]eleases/
+LabProg2019/x64/
+LabProg2019/x86/
+LabProg2019/[Aa][Rr][Mm]/
+LabProg2019/[Aa][Rr][Mm]64/
+LabProg2019/bld/
+LabProg2019/[Bb]in/
+LabProg2019/[Oo]bj/
+LabProg2019/[Ll]og/
+LabProg2019/[Ll]ogs/
 
 # Visual Studio 2015/2017 cache/options directory
 .vs/
@@ -805,3 +805,6 @@ bower_components
 
 ### WebSharper ###
 Scripts/
+*.exe
+*.cache
+*.pdb

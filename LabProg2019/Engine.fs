@@ -147,18 +147,19 @@ type engine (w : int, h : int, ?fps_cap : int, ?flip_queue) =
         Log.msg "exiting engine loop."
         
 
-        member private this.shoot2 (data : _ loop_data) st quit = 
-            let buff = buffers.[data.frame_cnt % Array.length buffers]
-            let (st', quit'), ts = stopwatch_quiet <| fun () ->
-                buff.lock_and_commit <| fun wr ->
-                    if this.auto_clear then wr.clear
-                    let st' = st
-                    let quit' = quit
-                    if this.show_sprites then lock sprites <| fun () -> for spr in sprites do spr.draw wr
-                    st', quit'
-            { data with state = st'; frame_cnt = data.frame_cnt + 1; quit = quit'; elapsed = ts }
+    //funzione aggiunta da noi per implementare il refresh manuale
+    member private this.shoot2 (data : _ loop_data) st quit = 
+        let buff = buffers.[data.frame_cnt % Array.length buffers]
+        let (st', quit'), ts = stopwatch_quiet <| fun () ->
+            buff.lock_and_commit <| fun wr ->
+                if this.auto_clear then wr.clear
+                let st' = st
+                let quit' = quit
+                if this.show_sprites then lock sprites <| fun () -> for spr in sprites do spr.draw wr
+                st', quit'
+        { data with state = st'; frame_cnt = data.frame_cnt + 1; quit = quit'; elapsed = ts }
 
-        member this.refresh st quit=
-            let mutable data = { state = st; frame_cnt = 0; quit = false; elapsed = new TimeSpan (); now = DateTime.Now }
-            data <- this.shoot2 data st quit
+    member this.refresh st quit=
+        let mutable data = { state = st; frame_cnt = 0; quit = false; elapsed = new TimeSpan (); now = DateTime.Now }
+        data <- this.shoot2 data st quit
 

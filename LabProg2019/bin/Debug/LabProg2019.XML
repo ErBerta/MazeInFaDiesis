@@ -589,7 +589,7 @@ Funzione di avvio del labirinto. Necessario fornire la modalità di gioco
 Funzione per la gestione dell&apos;avvio della risoluzione automatica
 </summary>
 </member>
-<member name="M:LabProg2019.Maze.creaPixPercorso(LabProg2019.Maze.state,System.ConsoleColor,System.Char,System.Int32)">
+<member name="M:LabProg2019.Maze.creaPixPath(LabProg2019.Maze.state,System.ConsoleColor,System.Char,System.Int32)">
 <summary>
 Funzione suppporto per la creazione degli sprite chetengono traccia del percorso
 </summary>
