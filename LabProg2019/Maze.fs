@@ -27,6 +27,11 @@ type state = {
 
 [< NoEquality; NoComparison >]
 type state_multi = {
+    st_player0: state
+    st_player1: state
+}
+(*
+type state_multi = {
     player : sprite
     player1 : sprite
     lab : sprite
@@ -34,7 +39,7 @@ type state_multi = {
     finish1 : sprite
     path_color: Color
     path_color1: Color
-}
+}*)
 
 
 //Definizione tipi di supporto
@@ -202,10 +207,6 @@ let my_update (key : ConsoleKeyInfo) (screen : wronly_raster) (st : state) =
     else if st.player.x = st.finish.x && st.player.y = st.finish.y then 
         //st.player.clear<
         //st.arrived.clear
-        exit "Hai_vinto!" 5
-    else if st.player.x = st.arrived.x && st.player.y = st.arrived.y then 
-        //st.player.clear
-        st.arrived.clear
         message "End" 5 st
         st, true
     else
@@ -332,18 +333,18 @@ let auto_start (key : ConsoleKeyInfo) (screen : wronly_raster) (st : state) : (s
     | _   -> st, false
 
 let multi_update (key : ConsoleKeyInfo) (screen : wronly_raster) (st:state_multi) : (state_multi*bool) =
-    let st0 = { 
+    let st0 = st.st_player0 (*{ 
         player = st.player
         lab = st.lab
         finish = st.finish
         path_color = st.path_color
-    }
-    let st1 = { 
+    }*)
+    let st1 = st.st_player1 (* { 
         player = st.player1
         lab = st.lab
         finish = st.finish1
         path_color = st.path_color1
-    }
+    }*)
     let s,r=
         match key.KeyChar with 
         | 'a' | 's' |'d' |'w'| 'A' | 'S' |'D' |'W' -> my_update key screen st0
@@ -355,9 +356,9 @@ let multi_update (key : ConsoleKeyInfo) (screen : wronly_raster) (st:state_multi
         | _ -> st0, false
         //   | ('a' | 's' |'d' |'w') -> my_update key screen st1
     if r then
-        if (st.player.x,st.player.y) = (st.arrived.x,st.arrived.y) then
+        if (st0.player.x,st0.player.y) = (st0.finish.x,st0.finish.y) then
             message "Il_player_1_ha_vinto!!" 6 st0
-        if (st.player1.x,st.player1.y) = (st.arrived1.x,st.arrived1.y) then
+        if (st1.player.x,st1.player.y) = (st1.finish.x,st1.finish.y) then
             message  "Il_player_2_ha_vinto!!" 6 st1
     st, r
   
@@ -430,7 +431,7 @@ let main (gm: Config.GameMod) (mW,mH) =
         let pixArrivo1 = pixel.create(Config.wall_pixel_char, Color.Red)
         let player1 = engine.create_and_register_sprite (image.rectangle (2, 1, pixPlayer1), W*2-4, 1, 2)
         let finish1 = engine.create_and_register_sprite (image.rectangle (2, 1, pixArrivo1), 2, H-2, 2)
-        let status = { 
+        (*let status = { 
             player = st0.player
             player1 = player1
             lab = lab
@@ -438,8 +439,18 @@ let main (gm: Config.GameMod) (mW,mH) =
             finish1 = finish1
             path_color = st0.path_color
             path_color1 = Color.Yellow
+        }*)
+        let st1 = { 
+            player =  player1
+            lab = lab
+            finish =  finish1
+            path_color =  Color.Yellow
         }
-        
+        let status = {
+            st_player0 = st0
+            st_player1 = st1
+        }
+
         infoPanel.draw_text (instruction, 2, 0, Color.Red, Color.White)
         engine.loop_on_key multi_update status
         
