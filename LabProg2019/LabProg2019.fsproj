@@ -75,6 +75,7 @@
     <Compile Include="Main.fs" />
     <None Include="App.config" />
     <Content Include="packages.config" />
+    <Compile Include="Snake.fs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="FSharp.Core">
