@@ -22,6 +22,17 @@ type state = {
     player : sprite
     lab : sprite
     arrived : sprite
+    path_color: Color
+}
+[< NoEquality; NoComparison >]
+type state_multi = {
+    player : sprite
+    player1 : sprite
+    lab : sprite
+    arrived : sprite
+    arrived1 : sprite
+    path_color: Color
+    path_color1: Color
 }
 //Definizione tipi di supporto
 type Direction = | LEFT | RIGHT | UP | DOWN | NULL
@@ -44,8 +55,8 @@ let W = 51
 let H = 51
 
 //definizione coordinate dell'arrivo
-let finex = W*2-4
-let finey = H-2
+//let finex = W*2-4
+//let finey = H-2
 
 let mutable killerPointx = 0
 let mutable killerPointy = 0
@@ -148,7 +159,7 @@ let exit (outMessage: String) (z:int) =
     ignore <| engine.create_and_register_sprite (rect, W-(width/2), H/2, z)
    
 ///Funzione suppporto per la creazione degli sprite chetengono traccia del percorso
-let creaPixPath st color char z =
+let creaPixPath (st:state) color char z =
     let pixpath = pixel.create(char, color)
     ignore <| engine.create_and_register_sprite (image.rectangle (2, 1, pixpath), int (st.player.x), int (st.player.y), z)
 
@@ -157,7 +168,7 @@ let my_update (key : ConsoleKeyInfo) (screen : wronly_raster) (st : state) =
     let isWall (x,y) =
         if mazing.Grid.[int (st.player.x / 2. + x), int (st.player.y + y)] = Path then 2.*x,y else 0.,0.
     //aggiornamento della traccia del percorso
-    creaPixPath st Color.Cyan Config.filled_pixel_char 2
+    creaPixPath st st.path_color Config.filled_pixel_char 2
     let dx, dy =
         match key.KeyChar with 
         | 'w'|'W' -> isWall(0.,-1.)
@@ -177,8 +188,8 @@ let my_update (key : ConsoleKeyInfo) (screen : wronly_raster) (st : state) =
         exit "Surprise!_You're_die!_Game_Over" 6
         st, true
     //controllo se è arrivato
-    else if st.player.x = float finex && st.player.y = float finey then 
-        //st.player.clear
+    else if st.player.x = st.arrived.x && st.player.y = st.arrived.y then 
+        //st.player.clear<
         //st.arrived.clear
         exit "Hai_vinto!" 5
         st, true
@@ -306,13 +317,29 @@ let auto_start (key : ConsoleKeyInfo) (screen : wronly_raster) (st : state) : (s
     |'q'|'Q' -> st, true
     | _   -> st, false
 
-let multi_update (key : ConsoleKeyInfo) (screen : wronly_raster) ((st0 : state),(st1 : state)) : (state*state*bool) =
+let multi_update (key : ConsoleKeyInfo) (screen : wronly_raster) (st:state_multi) : (state_multi*bool) =
+    let st0 = { 
+        player = st.player
+        lab = st.lab
+        arrived = st.arrived
+        path_color = st.path_color
+    }
+    let st1 = { 
+        player = st.player1
+        lab = st.lab
+        arrived = st.arrived1
+        path_color = st.path_color1
+    }
     let s,r=
         match key.KeyChar with 
-        | ('a' | 's' |'d' |'w') -> (my_update key screen st0)
+        | 'a' | 's' |'d' |'w'| 'A' | 'S' |'D' |'W' -> my_update key screen st0
+        | 'j' | 'J' ->  my_update (new ConsoleKeyInfo('a', new ConsoleKey(),false, false, false )) screen st1
+        | 'l' | 'L' ->  my_update (new ConsoleKeyInfo('d', new ConsoleKey(),false, false, false )) screen st1
+        | 'i' | 'I' ->  my_update (new ConsoleKeyInfo('w', new ConsoleKey(),false, false, false )) screen st1
+        | 'k' | 'K' ->  my_update (new ConsoleKeyInfo('s', new ConsoleKey(),false, false, false )) screen st1
         | _ -> st0, false
         //   | ('a' | 's' |'d' |'w') -> my_update key screen st1
-    s, st0, false
+    st, r
   
 
 ///Funzione di avvio del labirinto. Necessario fornire la modalità di gioco
@@ -350,13 +377,14 @@ let main (gm: Config.GameMod) =
     let pixArrivo = pixel.create(Config.wall_pixel_char, Color.Yellow)
     //creazione e registrazione sprite del giocatore e dell'arrivo
     let player = engine.create_and_register_sprite (image.rectangle (2, 1, pixGiocatore), 2, 1, 2)
-    let arrive = engine.create_and_register_sprite (image.rectangle (2, 1, pixArrivo), finex, finey, 2)
+    let arrive = engine.create_and_register_sprite (image.rectangle (2, 1, pixArrivo), W*2-4, H-2, 2)
 
     //inizializzazione variabile state
     let st0 = { 
         player = player
         lab = lab
         arrived = arrive
+        path_color = Color.Cyan
     }
    
     //start engine
@@ -372,20 +400,23 @@ let main (gm: Config.GameMod) =
         InfoPanel.draw_text (instruction, 2, 0, Color.Red, Color.White)
         engine.loop_on_key my_update st0
     | Config.GameMod.MultiPlayer -> 
-        let instruction = "Use W^ A< Sv D> to move player 1. Use Direction arrow to move player 2. Press 'q' to exit."
-        let pixGiocatore1 = pixel.create(Config.wall_pixel_char, Color.Blue)
-        let pixArrivo1 = pixel.create(Config.wall_pixel_char, Color.Yellow)
-        let player1 = engine.create_and_register_sprite (image.rectangle (2, 1, pixGiocatore), W*2-2, 1, 2)
-        let arrive1 = engine.create_and_register_sprite (image.rectangle (2, 1, pixArrivo), 2, finey, 2)
-
-        let st1 = { 
-            player = player1
+        let instruction = "Use W^ A< Sv D> to move player 1. Use I^ J< Kv L>  to move player 2. Press 'q' to exit."
+        let pixGiocatore1 = pixel.create(Config.wall_pixel_char, Color.Green)
+        let pixArrivo1 = pixel.create(Config.wall_pixel_char, Color.Red)
+        let player1 = engine.create_and_register_sprite (image.rectangle (2, 1, pixGiocatore1), W*2-4, 1, 2)
+        let arrive1 = engine.create_and_register_sprite (image.rectangle (2, 1, pixArrivo1), 2, H-2, 2)
+        let status = { 
+            player = st0.player
+            player1 = player1
             lab = lab
-            arrived = arrive1
+            arrived = st0.arrived
+            arrived1 = arrive1
+            path_color = st0.path_color
+            path_color1 = Color.Blue
         }
+        
         InfoPanel.draw_text (instruction, 2, 0, Color.Red, Color.White)
-        //engine.loop_on_key multi_update (st0,st1)
-        engine.loop_on_key my_update st0
+        engine.loop_on_key multi_update status
     | _ -> 
         while mazing.Grid.[ killerPointx,killerPointy]<> Cell.Path do 
             killerPointx <- rng.Next (mazing.Width-1) 
