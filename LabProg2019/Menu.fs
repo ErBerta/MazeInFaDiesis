@@ -43,7 +43,7 @@ let main (W,H) =
             | 1. -> gameMod <- Config.GameMod.Player
             | 2. -> gameMod <- Config.GameMod.Auto
             | 3. -> gameMod <- Config.GameMod.MazeEasterEgg
-            | 4. -> gameMod <- Config.GameMod.Game2
+            | 4. -> gameMod <- Config.GameMod.MultiPlayer
             | _ -> failwith "errore"
 
         //salvo lo stato 'exit' per interpretarlo correttamente una volta arrivato al main

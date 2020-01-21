@@ -34,7 +34,7 @@ let main_game () =
         Menu.main (50,25)
         //in base alla modalita' di menu selezionata gestisco l'avvio
         match Menu.gameMod with
-        | Config.GameMod.Player | Config.GameMod.Auto | Config.GameMod.MazeEasterEgg -> Maze.main (Menu.gameMod)
+        | Config.GameMod.OnePlayer | Config.GameMod.Auto | Config.GameMod.MazeEasterEgg | Config.GameMod.MultiPlayer -> Maze.main (Menu.gameMod)
         | Config.GameMod.Game2 -> failwith "funzione non implementata"
         | Config.GameMod.Exit -> exit 0
     //potremmo aggiungere altre funzionalità
@@ -90,4 +90,3 @@ let main argv =
         Console.ReadKey () |> ignore
         code
     #endif
-
