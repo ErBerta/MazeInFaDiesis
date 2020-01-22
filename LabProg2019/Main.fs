@@ -33,10 +33,12 @@ let main_game () =
     while true do        
         Menu.main (50,25)
         //in base alla modalita' di menu selezionata gestisco l'avvio
-        match Menu.gameMod with
-        | Config.GameMod.OnePlayer | Config.GameMod.Auto | Config.GameMod.MazeEasterEgg | Config.GameMod.MultiPlayer -> Maze.main (Menu.gameMod) (Menu.gameRes)
-        | Config.GameMod.Game2 -> failwith "funzione non implementata"
-        | Config.GameMod.Exit -> exit 0
+        //controllo che sia uscito dal secondo menu
+        if Menu.gameRes <> (-1,-1) then
+            match Menu.gameMod with
+            | Config.GameMod.OnePlayer | Config.GameMod.Auto | Config.GameMod.MazeEasterEgg | Config.GameMod.MultiPlayer -> Maze.main (Menu.gameMod) (Menu.gameRes)
+            | Config.GameMod.Game2 -> failwith "funzione non implementata"
+            | Config.GameMod.Exit -> exit 0
 
 
     //potremmo aggiungere altre funzionalità

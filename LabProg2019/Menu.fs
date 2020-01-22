@@ -72,12 +72,14 @@ let updateResMenu (key : ConsoleKeyInfo) (screen : wronly_raster) (st : state) =
         | _ -> failwith "errore"
 
     //salvo lo stato 'exit' per interpretarlo correttamente una volta arrivato al main
-    if key.KeyChar = 'q' || key.KeyChar = 'Q' then gameMod <- Config.GameMod.Exit 
+    if key.KeyChar = 'q' || key.KeyChar = 'Q' then gameRes <- (-1,-1)
     //se vengono premuti i caratteri 'q' e 'p' esco dal loop e passo al main per l'esecuzione del gioco
     if key.KeyChar = 'q' || key.KeyChar = 'Q' || key.KeyChar = 'p' || key.KeyChar = 'P' then st,true else st,false
 
 
 let main (W,H) = //Menu' principale
+    //imposto un valore standard
+    gameRes <- 25,25
     let engine = new engine (W, H)
     //creo lo sfondo del menu' utilizzando un quadrato gia' supportato dal motore
     let menu = engine.create_and_register_sprite (image.rectangle (W, H/2, pixel.filled Color.Blue, pixel.filled Color.Yellow),0,0,1)
