@@ -596,7 +596,7 @@ Funzione suppporto per la creazione degli sprite chetengono traccia del percorso
 </member>
 <member name="P:LabProg2019.Maze.mazing">
 <summary>
-Generazione e del Labirinto
+Generazione del Labirinto
 </summary>
 </member>
 <member name="M:LabProg2019.Maze.generate(LabProg2019.Maze.Maze)">

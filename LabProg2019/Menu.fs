@@ -20,7 +20,7 @@ type state = {
 }
 let mutable gameMod = Config.GameMod.Exit
 let mutable gameRes = 25,25
-let maxy = 6. //numero scelte - 2 (cornice + introduzione del menu)
+let mutable maxy = 3. //numero scelte - 2 (cornice + introduzione del menu)
 let miny = 1. //minimo, non cambiare
 
 //MENU
@@ -43,7 +43,7 @@ let updateMenu (key : ConsoleKeyInfo) (screen : wronly_raster) (st : state) =
         | 2. -> gameMod <- Config.GameMod.Auto
         | 3. -> gameMod <- Config.GameMod.MazeEasterEgg
         | 4. -> gameMod <- Config.GameMod.MultiPlayer
-        | _ -> failwith "errore"
+        | _ -> failwith "Error, invalid game mode"
 
     //salvo lo stato 'exit' per interpretarlo correttamente una volta arrivato al main
     if key.KeyChar = 'q' || key.KeyChar = 'Q' then gameMod <- Config.GameMod.Exit 
@@ -69,7 +69,8 @@ let updateResMenu (key : ConsoleKeyInfo) (screen : wronly_raster) (st : state) =
         | 2. -> gameRes <- (25,25)
         | 3. -> gameRes <- (51,51)
         | 4. -> gameRes <- (99,99)
-        | _ -> failwith "errore"
+        | 5. -> gameRes <- (99,51)
+        | _ -> failwith "Error, wrong choice for the resolution"
 
     //salvo lo stato 'exit' per interpretarlo correttamente una volta arrivato al main
     if key.KeyChar = 'q' || key.KeyChar = 'Q' then gameRes <- (-1,-1)
@@ -94,6 +95,7 @@ let main (W,H) = //Menu' principale
         choiceMenu = choice
     }
     //avvio il key loop che rimane in attesa della pressione di un tasto
+    maxy <- 6.
     engine.loop_on_key updateMenu st0
     menu.clear;
     choice.clear
@@ -104,7 +106,8 @@ let main (W,H) = //Menu' principale
         let st0 = {
             choiceMenu = choice
         }
-        menu.draw_text("Resolution\n_1._15*15\n_2._25*25\n_3._51*51\n_4._99*99\n\n\nUse_W^_Sv_to_move.\nPress_'p'_to_enter_or_'q'_to_quit\n", 2, 1, Color.Red, Color.Yellow)
+        menu.draw_text("Resolution\n_1._15*15\n_2._25*25\n_3._51*51\n_4._99*99\n_5._99*51\n\n\nUse_W^_Sv_to_move.\nPress_'p'_to_enter_or_'q'_to_quit\n", 2, 1, Color.Red, Color.Yellow)
+        maxy <- 7.
         engine.loop_on_key updateResMenu st0
 
 

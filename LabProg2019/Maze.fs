@@ -11,6 +11,7 @@ open External
 open Engine
 open Gfx
 open System.Threading
+open System.Diagnostics
 
 type CharInfo with
     static member wall = pixel.create (Config.wall_pixel_char, Color.White)
@@ -30,16 +31,6 @@ type state_multi = {
     st_player0: state
     st_player1: state
 }
-(*
-type state_multi = {
-    player : sprite
-    player1 : sprite
-    lab : sprite
-    finish : sprite
-    finish1 : sprite
-    path_color: Color
-    path_color1: Color
-}*)
 
 
 //Definizione tipi di supporto
@@ -58,12 +49,10 @@ type Maze = {
 //Istanziamento della classe random
 let rng = new System.Random()
 
-//definizione dimensione del labirinto di default
+//definizione dimensione del labirinto (assegno un valore di default nel caso qualcosa dovesse andare storto)
 let mutable W,H = 25,25
 
-//definizione coordinate dell'arrivo
-//let finex = W*2-4
-//let finey = H-2
+let mutable stopWatch = new Stopwatch ()
 
 let mutable killerPointx = 0
 let mutable killerPointy = 0
@@ -89,11 +78,11 @@ let generate (maze : Maze) : Maze =
     let isPossible (x,y) =
         x>0 && x < maze.Width-1 && y>0 && y<maze.Height-1
     
-    //Lista delle coordinate dei delle celle 'Wall' che son vicine a quella indicata (a distanza di 2) 
+    //Lista delle coordinate delle celle 'Wall' che son vicine a quella indicata (a distanza di 2) 
     let frontier (x,y) =
         [x-2,y; x+2,y; x,y-2; x,y+2] |> List.filter (fun (x,y) -> isPossible (x,y) && maze.Grid.[x,y] = Wall)
 
-    //Lista delle coordinate dei delle celle 'Path' che son vicine a quella indicata (a distanza di 2) 
+    //Lista delle coordinate delle celle 'Path' che son vicine a quella indicata (a distanza di 2) 
     let neighbor (x,y) =
         [x-2,y;x+2,y; x,y-2; x, y+2] |> List.filter (fun (x,y) -> isPossible (x,y) && maze.Grid.[x,y] = Path)
     
@@ -121,7 +110,7 @@ let generate (maze : Maze) : Maze =
             | _ -> failwith "Error. Not supported"
         (x,y)
     
-
+    //collega due vicini "a caso"
     let connectRandomNeighbor (x,y) =
         let neighbors = neighbor (x,y)
         let pickedIndex = rng.Next(neighbors.Length)
@@ -158,14 +147,16 @@ let generate (maze : Maze) : Maze =
     maze
 
 
-///Generazione e del Labirinto
+///Generazione del Labirinto
 let mutable mazing = generate(initMaze W H)
 
+//attende il tasto d'uscita
 let wait_escape (key : ConsoleKeyInfo) (screen : wronly_raster) (st : state)=
    match key.KeyChar with 
-   | 'q' -> st, true
+   |'q' -> st, true
    | _ -> st,false
 
+//stampa messaggio e avvia il motore in attesa di una risposta
 let message (message: String) (z:int) st =
     let width = message.Length + 6 
     let rect= image.rectangle (width, 5, pixel.filled Color.Blue, pixel.filled Color.Yellow)
@@ -187,11 +178,11 @@ let my_update (key : ConsoleKeyInfo) (screen : wronly_raster) (st : state) =
     creaPixPath st st.path_color Config.filled_pixel_char 2
     let dx, dy =
         match key.KeyChar with 
-        | 'w'|'W' -> isWall(0.,-1.)
-        | 's'|'S' -> isWall(0., 1.)
-        | 'a'|'A' -> isWall(-1., 0.)
-        | 'd'|'D' -> isWall(1., 0.)
-        | _   -> 0., 0.
+        |'w'|'W' -> isWall(0.,-1.)
+        |'s'|'S' -> isWall(0., 1.)
+        |'a'|'A' -> isWall(-1., 0.)
+        |'d'|'D' -> isWall(1., 0.)
+        | _ -> 0., 0.
     //spostamento effettivo del player
     st.player.move_by (dx, dy)
     //messaggi di log, utili in fase di debug
@@ -200,13 +191,10 @@ let my_update (key : ConsoleKeyInfo) (screen : wronly_raster) (st : state) =
     //EASTER EGG - Killer point ~ funziona solo nella modalita' interattiva specifica
     if st.player.x = float (killerPointx*2) && st.player.y = float killerPointy then 
         st.player.clear
-        //st.arrived.clear
         message "Surprise!_You're_die!_Game_Over" 6 st 
         st, true
     //controllo se è arrivato
     else if st.player.x = st.finish.x && st.player.y = st.finish.y then 
-        //st.player.clear<
-        //st.arrived.clear
         message "End" 5 st
         st, true
     else
@@ -250,9 +238,9 @@ let AutoResolver st screen =
     
 
 
-    ///funzione ricorsiva per la ricerca che tiene traccia delle stato, dello schermo e dell'ultima azione svolta
+    ///funzione ricorsiva per la ricerca del percorso, salva le celle in cui è passata in un array di supporto
     let rec research (st:state) (screen: wronly_raster) (dx,dy) =
-        let wait = 1
+        let wait = 0
         if not stop then
             Thread.Sleep(wait)
             //controllo la possibilità di spostarmi in giù e di non esserci gia andato
@@ -262,7 +250,7 @@ let AutoResolver st screen =
                 mazing.Visited.[int st.player.x/2,int st.player.y] <- Visited
                 let reto, fao = move st Direction.DOWN screen
                 if not(fao) then
-                    failwith "Error"
+                    failwith "Error, automatic resolution failed"
                 Log.msg  "Down (%A, %A)" (st.player.x/2.) (st.player.y)
                 if not reto then
                     research st screen (dxd,dyd)
@@ -276,7 +264,7 @@ let AutoResolver st screen =
                 mazing.Visited.[int st.player.x/2,int st.player.y] <- Visited
                 let reto, fao = move st Direction.RIGHT screen
                 if not(fao) then
-                    failwith "Error"
+                    failwith "Error, automatic resolution failed"
                 Log.msg  "Right (%A, %A)" (st.player.x/2.) (st.player.y)
                 if not reto then
                     research st screen (dxr,dyr)
@@ -290,7 +278,7 @@ let AutoResolver st screen =
                 mazing.Visited.[int st.player.x/2,int st.player.y] <- Visited
                 let reto, fao = move st Direction.LEFT screen
                 if not(fao) then
-                    failwith "Error"
+                    failwith "Error, automatic resolution failed"
                 Log.msg  "Left (%A, %A)" (st.player.x/2.) (st.player.y)
                 if not reto then
                     research st screen (dxl,dyl)
@@ -304,7 +292,7 @@ let AutoResolver st screen =
                 mazing.Visited.[(int st.player.x)/2,int st.player.y] <- Visited
                 let reto, fao = move st Direction.UP screen
                 if not(fao) then
-                    failwith "Error"
+                    failwith "Error, automatic resolution failed"
                 Log.msg  "Up (%A, %A)" (st.player.x/2.) (st.player.y)
                 if not reto then
                     research st screen (dxu,dyu)
@@ -327,24 +315,18 @@ let AutoResolver st screen =
 ///Funzione per la gestione dell'avvio della risoluzione automatica
 let auto_start (key : ConsoleKeyInfo) (screen : wronly_raster) (st : state) : (state*bool) = 
     match key.KeyChar with 
-    |'s'|'S' -> AutoResolver st screen
+    |'s'|'S' -> stopWatch.Start () //ottengo il tempo impiegato tra i log
+                AutoResolver st screen
+                stopWatch.Stop();
+                Log.msg "Time elapsed: %i min, %i sec" stopWatch.Elapsed.Minutes stopWatch.Elapsed.Seconds
                 st, true
     |'q'|'Q' -> st, true
     | _   -> st, false
 
+//gestione aggiornamento posizione multiutenza
 let multi_update (key : ConsoleKeyInfo) (screen : wronly_raster) (st:state_multi) : (state_multi*bool) =
-    let st0 = st.st_player0 (*{ 
-        player = st.player
-        lab = st.lab
-        finish = st.finish
-        path_color = st.path_color
-    }*)
-    let st1 = st.st_player1 (* { 
-        player = st.player1
-        lab = st.lab
-        finish = st.finish1
-        path_color = st.path_color1
-    }*)
+    let st0 = st.st_player0
+    let st1 = st.st_player1
     let s,r=
         match key.KeyChar with 
         | 'a' | 's' |'d' |'w'| 'A' | 'S' |'D' |'W' -> my_update key screen st0
@@ -354,7 +336,6 @@ let multi_update (key : ConsoleKeyInfo) (screen : wronly_raster) (st:state_multi
         | 'k' | 'K' ->  my_update (new ConsoleKeyInfo('s', new ConsoleKey(),false, false, false )) screen st1
         | 'q' -> st0, true
         | _ -> st0, false
-        //   | ('a' | 's' |'d' |'w') -> my_update key screen st1
     if r then
         if (st0.player.x,st0.player.y) = (st0.finish.x,st0.finish.y) then
             message "Il_player_1_ha_vinto!!" 6 st0
@@ -381,7 +362,7 @@ let main (gm: Config.GameMod) (mW,mH) =
                     | Wall -> pixel.wall
                     | Path -> pixel.path
                 if x<>W || y<>H then 
-                    //calcolo della posizione nell'array, date lo coordinete della matrice
+                    //calcolo della posizione nell'array, date lo coordinate della matrice
                     let pos = x*W+y
                     pixelarray.[2*pos] <- c
                     pixelarray.[2*pos+1] <- c
@@ -409,10 +390,11 @@ let main (gm: Config.GameMod) (mW,mH) =
         finish = finish
         path_color = Color.Cyan
     }
-
+    //inizializzazione killerpoint
     killerPointx <- 0
     killerPointy <- 0
-   
+    //inizializzazione stop
+    stop <- false
     //start engine
     match gm with
     | Config.GameMod.Auto ->
@@ -431,15 +413,6 @@ let main (gm: Config.GameMod) (mW,mH) =
         let pixArrivo1 = pixel.create(Config.wall_pixel_char, Color.Red)
         let player1 = engine.create_and_register_sprite (image.rectangle (2, 1, pixPlayer1), W*2-4, 1, 2)
         let finish1 = engine.create_and_register_sprite (image.rectangle (2, 1, pixArrivo1), 2, H-2, 2)
-        (*let status = { 
-            player = st0.player
-            player1 = player1
-            lab = lab
-            finish = st0.finish
-            finish1 = finish1
-            path_color = st0.path_color
-            path_color1 = Color.Yellow
-        }*)
         let st1 = { 
             player =  player1
             lab = lab
@@ -456,9 +429,11 @@ let main (gm: Config.GameMod) (mW,mH) =
         
     | _ -> 
         while mazing.Grid.[ killerPointx,killerPointy]<> Cell.Path do 
+            //valorizzazione killer point
             killerPointx <- rng.Next (mazing.Width-1) 
             killerPointy <- rng.Next (mazing.Height-1)
         Log.msg "Killer point on (X: %A, Y: %A)" killerPointx killerPointy
         let instruction = "Use W^ A< Sv D> to move your player. Press 'q' to exit."
         infoPanel.draw_text (instruction, 2, 0, Color.Red, Color.White)
         engine.loop_on_key my_update st0
+    
