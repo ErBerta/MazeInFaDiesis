@@ -1,7 +1,7 @@
 ﻿(*
 * LabProg2019 - Progetto di Programmazione a.a. 2019-20
-* Maze.fs: Maze Manager
-* (C) 2020 Group 10 - Elia Bertapelle (), Leonardo Piccolo (882351) @ Universita' Ca' Foscari di Venezia
+* Menu.fs: Menu Manager
+* (C) 2020 Group 10 - Elia Bertapelle (881359), Leonardo Piccolo (882351) @ Universita' Ca' Foscari di Venezia
 *)
 
 module LabProg2019.Menu
@@ -12,18 +12,19 @@ open Engine
 open Gfx
 open System.Text
 
-//let mutable gameMod = Config.GameMod.Exit
-
+//definizione di tipo per l'indicatore di scelta nel menu
 [< NoEquality; NoComparison >]
 type state = {
     choiceMenu : sprite
 }
+
 let mutable gameMod = Config.GameMod.Exit
 let mutable gameRes = 25,25
 let mutable maxy = 3. //numero scelte - 2 (cornice + introduzione del menu)
 let miny = 1. //minimo, non cambiare
 
 //MENU
+///Aggiornamento del selettore della modalità di gioco
 let updateMenu (key : ConsoleKeyInfo) (screen : wronly_raster) (st : state) =
     let ismenu (x,y) =
         if st.choiceMenu.y + y < maxy && st.choiceMenu.y + y > miny then x,y else 0.,0.
@@ -50,6 +51,7 @@ let updateMenu (key : ConsoleKeyInfo) (screen : wronly_raster) (st : state) =
     //se vengono premuti i caratteri 'q' e 'p' esco dal loop e passo al main per l'esecuzione del gioco
     if key.KeyChar = 'q' || key.KeyChar = 'Q' || key.KeyChar = 'p' || key.KeyChar = 'P' then st,true else st,false
 
+///Aggiornamento del selettore della risoluzione
 let updateResMenu (key : ConsoleKeyInfo) (screen : wronly_raster) (st : state) =
     let ismenu (x,y) =
         if st.choiceMenu.y + y < maxy && st.choiceMenu.y + y > miny then x,y else 0.,0.

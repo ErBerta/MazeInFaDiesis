@@ -103,6 +103,8 @@ type engine (w : int, h : int, ?fps_cap : int, ?flip_queue) =
                 st', quit'
         { data with state = st'; frame_cnt = data.frame_cnt + 1; quit = quit'; elapsed = ts }
 
+    static member private log_key_pressed (k : ConsoleKeyInfo) =
+        Log.debug "engine: key pressed: %s" (let c = k.KeyChar in if Char.IsLetterOrDigit c then sprintf "'%c'" c else sprintf "ASCII: %d" (int c))
 
     /// Start the engine loop given a custom update function and an initial state.
     /// The update function is called every time a key is pressed on the system console; the key is passed as argument to the update function, together with the output wronly_raster and the state.
@@ -113,7 +115,7 @@ type engine (w : int, h : int, ?fps_cap : int, ?flip_queue) =
         data <- this.shoot (fun _ st -> st, false) data
         while not data.quit do
             let k = Console.ReadKey true
-            Log.debug "engine: key pressed: %c" k.KeyChar
+            engine.log_key_pressed k
             data <- this.shoot (update k) data
         Log.msg "exiting engine loop-on-key."
 
@@ -133,7 +135,7 @@ type engine (w : int, h : int, ?fps_cap : int, ?flip_queue) =
                 let ko =
                     if Console.KeyAvailable then
                         let k = Console.ReadKey true
-                        Log.debug "engine: key pressed: %c" k.KeyChar 
+                        engine.log_key_pressed k
                         Some k
                     else None
                 let r = this.shoot (update ko) r

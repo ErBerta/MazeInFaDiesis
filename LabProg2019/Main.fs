@@ -1,9 +1,8 @@
 ﻿(*
 * LabProg2019 - Progetto di Programmazione a.a. 2019-20
-* Main.fs: main code
-* (C) 2019 Alvise Spano' @ Universita' Ca' Foscari di Venezia
+* Main.fs: Main File
+* (C) 2020 Group 10 - Elia Bertapelle (881359), Leonardo Piccolo (882351) @ Universita' Ca' Foscari di Venezia
 *)
-
 module LabProg2019.Main
 
 open System
@@ -11,10 +10,6 @@ open System.Diagnostics
 open Globals
 open System.IO.Pipes
 open System.IO
-
-
-// game mode (client)
-//
 
 
 let main_game () =
@@ -52,8 +47,6 @@ let main_game () =
     0
 
 // log mode (server)
-//
-
 let main_log_server () =
     Log.msg "log server process started"
     Console.Title <- Config.log_console_title
@@ -76,8 +69,6 @@ let main_log_server () =
     0
 
 // main 
-//
-
 [<EntryPoint>]
 let main argv = 
     #if TEST

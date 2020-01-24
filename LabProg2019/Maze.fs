@@ -15,9 +15,10 @@ open System.Diagnostics
 
 type CharInfo with
     static member wall = pixel.create (Config.wall_pixel_char, Color.White)
-    static member internal path = pixel.filled Color.Black
+    static member path = pixel.filled Color.Black
     member this.isWall = this = pixel.wall
 
+//Definizionde del tipo stato del giocatore
 [< NoEquality; NoComparison >]
 type state = {
     player : sprite
@@ -26,6 +27,7 @@ type state = {
     path_color: Color
 }
 
+//definizione di tipo dello stato di supporto per il multiplayer, contenente gli stati dei giocatori
 [< NoEquality; NoComparison >]
 type state_multi = {
     st_player0: state
@@ -52,6 +54,7 @@ let rng = new System.Random()
 //definizione dimensione del labirinto (assegno un valore di default nel caso qualcosa dovesse andare storto)
 let mutable W,H = 25,25
 
+//cronometro per l'autoresolver
 let mutable stopWatch = new Stopwatch ()
 
 let mutable killerPointx = 0
@@ -78,11 +81,11 @@ let generate (maze : Maze) : Maze =
     let isPossible (x,y) =
         x>0 && x < maze.Width-1 && y>0 && y<maze.Height-1
     
-    //Lista delle coordinate delle celle 'Wall' che son vicine a quella indicata (a distanza di 2) 
+    ///Lista delle coordinate delle celle 'Wall' che son vicine a quella indicata (a distanza di 2) 
     let frontier (x,y) =
         [x-2,y; x+2,y; x,y-2; x,y+2] |> List.filter (fun (x,y) -> isPossible (x,y) && maze.Grid.[x,y] = Wall)
 
-    //Lista delle coordinate delle celle 'Path' che son vicine a quella indicata (a distanza di 2) 
+    ///Lista delle coordinate delle celle 'Path' che son vicine a quella indicata (a distanza di 2) 
     let neighbor (x,y) =
         [x-2,y;x+2,y; x,y-2; x, y+2] |> List.filter (fun (x,y) -> isPossible (x,y) && maze.Grid.[x,y] = Path)
     
@@ -90,6 +93,7 @@ let generate (maze : Maze) : Maze =
     ///Generatore di coordinate valide random
     let randomCell () = rng.Next(maze.Width),rng.Next(maze.Height)
 
+    ///Restituisce la lista senza l'elemento di indice 'index' da una lista di coppie di interi
     let removeAt index (lst : (int * int) list) : (int * int) list =
         let x,y = lst.[index]
         lst |> List.filter (fun (a,b) -> not (a = x && b = y) )
@@ -110,24 +114,31 @@ let generate (maze : Maze) : Maze =
             | _ -> failwith "Error. Not supported"
         (x,y)
     
-    //collega due vicini "a caso"
+    ///collegamento tra il punto indicato e un vicino "a caso"
     let connectRandomNeighbor (x,y) =
+        //ottiene lista vicini di x,y
         let neighbors = neighbor (x,y)
-        let pickedIndex = rng.Next(neighbors.Length)
-        let xn,yn = neighbors.[pickedIndex]
+        //scelta randomica del vicino da collegare
+        let selectedIndex = rng.Next(neighbors.Length)
+        //ottenimento coordinate del vicino scelto
+        let xn,yn = neighbors.[selectedIndex]
+        //ottenimento cella intermedia tra il punto indicato e il vicino scelto
         let xb,yb = getMiddleCell (x,y) (xn,yn)
         maze.Grid.[xb,yb] <- Path
         ()
     
-    let rec extend front =
+    ///estensione ricorsiva del punto
+    let rec pathextender front =
         match front with
         | [] -> ()
         | _ ->
-            let pickedIndex = rng.Next(front.Length)
-            let xf,yf = front.[pickedIndex]
+            //scelta randomica di uno dei vicini e impostazione a passaggio
+            let selectedIndex = rng.Next(front.Length)
+            let xf,yf = front.[selectedIndex]
             maze.Grid.[xf,yf] <- Path
             connectRandomNeighbor (xf,yf)
-            extend ((front |> removeAt pickedIndex) @ frontier (xf,yf))
+            //richiamo ricorsivo passando la lista dei vicini del nuovo punto e la lista dei vicini del punto precedente, rimuovendo quello già usato
+            pathextender ((front |> removeAt selectedIndex) @ frontier (xf,yf))
 
     ///Ottiene un punto casuale di partenza per la generazione del labirinto, con coordinate valide
     let rec getInitCell (x,y) =
@@ -142,7 +153,7 @@ let generate (maze : Maze) : Maze =
 
     let x,y = getInitCell (randomCell())
     maze.Grid.[x,y] <- Path
-    extend (frontier (x,y))
+    pathextender (frontier (x,y))
     
     maze
 
@@ -173,9 +184,12 @@ let creaPixPath (st:state) color char z =
 //gestione movimenti modalita' interattiva
 let my_update (key : ConsoleKeyInfo) (screen : wronly_raster) (st : state) =
     let isWall (x,y) =
-        if mazing.Grid.[int (st.player.x / 2. + x), int (st.player.y + y)] = Path then 2.*x,y else 0.,0.
+        if mazing.Grid.[int (st.player.x / 2. + x), int (st.player.y + y)] = Path then 
+            creaPixPath st st.path_color Config.filled_pixel_char 2 
+            2.*x,y 
+        else 0.,0.
     //aggiornamento della traccia del percorso
-    creaPixPath st st.path_color Config.filled_pixel_char 2
+    //creaPixPath st st.path_color Config.filled_pixel_char 2
     let dx, dy =
         match key.KeyChar with 
         |'w'|'W' -> isWall(0.,-1.)
@@ -323,7 +337,7 @@ let auto_start (key : ConsoleKeyInfo) (screen : wronly_raster) (st : state) : (s
     |'q'|'Q' -> st, true
     | _   -> st, false
 
-//gestione aggiornamento posizione multiutenza
+//gestione aggiornamento posizione multiplayer
 let multi_update (key : ConsoleKeyInfo) (screen : wronly_raster) (st:state_multi) : (state_multi*bool) =
     let st0 = st.st_player0
     let st1 = st.st_player1
@@ -334,8 +348,10 @@ let multi_update (key : ConsoleKeyInfo) (screen : wronly_raster) (st:state_multi
         | 'l' | 'L' ->  my_update (new ConsoleKeyInfo('d', new ConsoleKey(),false, false, false )) screen st1
         | 'i' | 'I' ->  my_update (new ConsoleKeyInfo('w', new ConsoleKey(),false, false, false )) screen st1
         | 'k' | 'K' ->  my_update (new ConsoleKeyInfo('s', new ConsoleKey(),false, false, false )) screen st1
-        | 'q' -> st0, true
+        | 'q' | 'Q' -> st0, true
         | _ -> st0, false
+
+    //gestione vittoria p
     if r then
         if (st0.player.x,st0.player.y) = (st0.finish.x,st0.finish.y) then
             message "Il_player_1_ha_vinto!!" 6 st0
@@ -350,7 +366,8 @@ let main (gm: Config.GameMod) (mW,mH) =
     H <- mH
     engine <- new engine (2*W, H)
     mazing <- generate(initMaze W H)
-    ///convertirore della griglia del labirinto generato e raddoppio delle pareti in orizzontale
+
+    ///convertirore della griglia del labirinto generato nell'array di pixel per l'engine, raddoppiando le pareti in orizzontale
     let maz (grid: Maze): pixel[] = 
         //creo un'array vuoto 
         let pixelarray = Array.zeroCreate ((grid.Height)*(grid.Width)*2) 
@@ -395,20 +412,29 @@ let main (gm: Config.GameMod) (mW,mH) =
     killerPointy <- 0
     //inizializzazione stop
     stop <- false
-    //start engine
+
+    //select game mode
     match gm with
     | Config.GameMod.Auto ->
+        //definizione e stampa delle istruzioni di gioco per la modalità automatica
         let instruction = "Press 's' to start the automatic resolver, 'q' to quit"
         infoPanel.draw_text (instruction, 2, 0, Color.Red, Color.White)
+        //avvio key listener 
         engine.loop_on_key auto_start st0 
-        let instruction = "Press any key to exit..."
-        infoPanel.draw_text (instruction, 2, 0, Color.Red, Color.White)
+        (*let instruction = "Press any key to exit..."
+        infoPanel.draw_text (instruction, 2, 0, Color.Red, Color.White)*)
     | Config.GameMod.OnePlayer ->
+        //definizione e stampa delle istruzioni di gioco per la modalità singolo giocatore
         let instruction = "Use W^ A< Sv D> to move your player. Press 'q' to exit."
         infoPanel.draw_text (instruction, 2, 0, Color.Red, Color.White)
+        //avvio key listener 
         engine.loop_on_key my_update st0
     | Config.GameMod.MultiPlayer -> 
+        //definizione e stampa delle istruzioni di gioco per la modalità multi giocatore
         let instruction = "Use W^ A< Sv D> to move player 1. Use I^ J< Kv L>  to move player 2. Press 'q' to exit."
+        infoPanel.draw_text (instruction, 2, 0, Color.Red, Color.White)
+
+        //definizione del secondo player, del suo arrivo e del suo stato
         let pixPlayer1 = pixel.create(Config.wall_pixel_char, Color.Green)
         let pixArrivo1 = pixel.create(Config.wall_pixel_char, Color.Red)
         let player1 = engine.create_and_register_sprite (image.rectangle (2, 1, pixPlayer1), W*2-4, 1, 2)
@@ -419,12 +445,13 @@ let main (gm: Config.GameMod) (mW,mH) =
             finish =  finish1
             path_color =  Color.Yellow
         }
+
+        //stato di supporto per il trasporto degli stati dei giocare
         let status = {
             st_player0 = st0
             st_player1 = st1
         }
-
-        infoPanel.draw_text (instruction, 2, 0, Color.Red, Color.White)
+        //avvio key listener 
         engine.loop_on_key multi_update status
         
     | _ -> 
@@ -433,7 +460,10 @@ let main (gm: Config.GameMod) (mW,mH) =
             killerPointx <- rng.Next (mazing.Width-1) 
             killerPointy <- rng.Next (mazing.Height-1)
         Log.msg "Killer point on (X: %A, Y: %A)" killerPointx killerPointy
+
+        //definizione e stampa delle istruzioni di gioco per la modalità giocatore singolo con easter egg
         let instruction = "Use W^ A< Sv D> to move your player. Press 'q' to exit."
         infoPanel.draw_text (instruction, 2, 0, Color.Red, Color.White)
+        //avvio key listener 
         engine.loop_on_key my_update st0
     
