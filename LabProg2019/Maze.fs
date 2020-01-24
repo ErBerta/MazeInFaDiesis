@@ -254,12 +254,12 @@ let AutoResolver st screen =
 
     ///funzione ricorsiva per la ricerca del percorso, salva le celle in cui è passata in un array di supporto
     let rec research (st:state) (screen: wronly_raster) (dx,dy) =
-        let wait = 0
+        let wait = 25
         if not stop then
-            Thread.Sleep(wait)
             //controllo la possibilità di spostarmi in giù e di non esserci gia andato
             let dxd, dyd = trymove st Direction.DOWN 
             if (dxd,dyd)<>(0.,0.) && (mazing.Visited.[(int st.player.x+int dxd)/2,int st.player.y+ int dyd] <> Visited) then
+                Thread.Sleep(wait)
                 //aggiorno la matrice 
                 mazing.Visited.[int st.player.x/2,int st.player.y] <- Visited
                 let reto, fao = move st Direction.DOWN screen
@@ -272,9 +272,10 @@ let AutoResolver st screen =
                     stop <- true
         
         if not stop then
-        //controllo la possibilità di spostarmi a destra e di non esserci gia andato
+            //controllo la possibilità di spostarmi a destra e di non esserci gia andato
             let dxr, dyr = trymove st Direction.RIGHT
             if (dxr,dyr)<>(0.,0.) && (mazing.Visited.[(int st.player.x + int dxr)/2,int st.player.y + int dyr] <> Visited) then
+                Thread.Sleep(wait)
                 mazing.Visited.[int st.player.x/2,int st.player.y] <- Visited
                 let reto, fao = move st Direction.RIGHT screen
                 if not(fao) then
@@ -289,6 +290,7 @@ let AutoResolver st screen =
             //controllo la possibilità di spostarmi a sinistra e di non esserci gia andato
             let dxl, dyl = trymove st Direction.LEFT 
             if (dxl,dyl)<>(0.,0.) && (mazing.Visited.[(int st.player.x + int dxl)/2,int st.player.y + int dyl] <> Visited) then
+                Thread.Sleep(wait)
                 mazing.Visited.[int st.player.x/2,int st.player.y] <- Visited
                 let reto, fao = move st Direction.LEFT screen
                 if not(fao) then
@@ -303,6 +305,7 @@ let AutoResolver st screen =
             //controllo la possibilità di spostarmi in su e di non esserci gia andato
             let dxu, dyu = trymove st Direction.UP 
             if (dxu,dyu)<>(0.,0.) && (mazing.Visited.[(int st.player.x+ int dxu)/2 ,int st.player.y + int dyu] <> Visited) then
+                Thread.Sleep(wait)
                 mazing.Visited.[(int st.player.x)/2,int st.player.y] <- Visited
                 let reto, fao = move st Direction.UP screen
                 if not(fao) then
@@ -314,11 +317,11 @@ let AutoResolver st screen =
                     stop <- true
 
         if not stop then
+            Thread.Sleep(wait)
             //segno il pecorso come già visitato 2 volte
             creaPixPath st Color.Red Config.filled_pixel_char 4
             //torno indietro
             st.player.move_by(-dx,-dy)
-            Thread.Sleep(wait)
             engine.refresh st false
 
     //richiamo funzione per avvio della ricorsione
@@ -329,10 +332,11 @@ let AutoResolver st screen =
 ///Funzione per la gestione dell'avvio della risoluzione automatica
 let auto_start (key : ConsoleKeyInfo) (screen : wronly_raster) (st : state) : (state*bool) = 
     match key.KeyChar with 
-    |'s'|'S' -> stopWatch.Start () //ottengo il tempo impiegato tra i log
+    |'s'|'S' -> stopWatch.Reset ()
+                stopWatch.Start () //ottengo il tempo impiegato tra i log
                 AutoResolver st screen
                 stopWatch.Stop();
-                Log.msg "Time elapsed: %i min, %i sec" stopWatch.Elapsed.Minutes stopWatch.Elapsed.Seconds
+                Log.msg "Time elapsed: %i min, %i sec, %i ms" stopWatch.Elapsed.Minutes stopWatch.Elapsed.Seconds stopWatch.Elapsed.Milliseconds
                 st, true
     |'q'|'Q' -> st, true
     | _   -> st, false
