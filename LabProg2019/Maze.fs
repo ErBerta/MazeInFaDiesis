@@ -167,12 +167,25 @@ let wait_escape (key : ConsoleKeyInfo) (screen : wronly_raster) (st : state)=
    |'q' -> st, true
    | _ -> st,false
 
+//trova la lunghezza massima delle varie stringhe
+let rec maxL (split:string[]) (i:int) :int=
+    if i>=0 then
+        let dim = split.[i].Length
+        let dim2 = maxL split (i-1)
+        if dim > dim2 then dim else dim2
+    else
+        0
+//trova larghezza e altezza del rettangolo da creare
+let findvalues (message:string) =
+    let split = message.Split ('\n')
+    (maxL split (split.Length-1) + 6,split.Length + 4)
+
 //stampa messaggio e avvia il motore in attesa di una risposta
 let message (message: String) (z:int) st =
-    let width = message.Length + 6 
-    let rect= image.rectangle (width, 5, pixel.filled Color.Blue, pixel.filled Color.Yellow)
+    let (width,height) = findvalues message
+    let rect= image.rectangle (width, height, pixel.filled Color.Blue, pixel.filled Color.Yellow)
     rect.draw_text(message, 3, 2, Color.Red, Color.Yellow)
-    ignore <| engine.create_and_register_sprite (rect, W-(width/2), H/2, z)
+    ignore <| engine.create_and_register_sprite (rect, W-(width/2), H/2-(height/2), z)
     engine.loop_on_key wait_escape st
   
 
@@ -205,7 +218,7 @@ let my_update (key : ConsoleKeyInfo) (screen : wronly_raster) (st : state) =
     //EASTER EGG - Killer point ~ funziona solo nella modalita' interattiva specifica
     if st.player.x = float (killerPointx*2) && st.player.y = float killerPointy then 
         st.player.clear
-        message "Surprise!_You're_die!_Game_Over" 6 st 
+        message "Surprise!_You're_die!\nGame_Over" 6 st 
         st, true
     //controllo se è arrivato
     else if st.player.x = st.finish.x && st.player.y = st.finish.y then 

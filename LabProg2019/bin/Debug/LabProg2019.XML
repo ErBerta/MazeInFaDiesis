@@ -604,5 +604,15 @@ Generazione del Labirinto
 Generatore del labirinto
 </summary>
 </member>
+<member name="M:LabProg2019.Menu.updateResMenu(System.ConsoleKeyInfo,LabProg2019.Gfx.wronly_raster,LabProg2019.Menu.state)">
+<summary>
+Aggiornamento del selettore della risoluzione
+</summary>
+</member>
+<member name="M:LabProg2019.Menu.updateMenu(System.ConsoleKeyInfo,LabProg2019.Gfx.wronly_raster,LabProg2019.Menu.state)">
+<summary>
+Aggiornamento del selettore della modalità di gioco
+</summary>
+</member>
 </members>
 </doc>
