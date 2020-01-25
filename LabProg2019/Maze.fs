@@ -78,20 +78,20 @@ let initMaze dx dy =
 ///Generatore del labirinto
 let generate (maze : Maze) : Maze =
     ///Controllo che le coordinate siano valide
-    let isPossible (x,y) =
+    let isPossible (x,y) = 
         x>0 && x < maze.Width-1 && y>0 && y<maze.Height-1
     
     ///Lista delle coordinate delle celle 'Wall' che son vicine a quella indicata (a distanza di 2) 
-    let frontier (x,y) =
+    let frontier (x,y) = 
         [x-2,y; x+2,y; x,y-2; x,y+2] |> List.filter (fun (x,y) -> isPossible (x,y) && maze.Grid.[x,y] = Wall)
 
     ///Lista delle coordinate delle celle 'Path' che son vicine a quella indicata (a distanza di 2) 
-    let neighbor (x,y) =
+    let neighbor (x,y) = 
         [x-2,y;x+2,y; x,y-2; x, y+2] |> List.filter (fun (x,y) -> isPossible (x,y) && maze.Grid.[x,y] = Path)
     
-
     ///Generatore di coordinate valide random
-    let randomCell () = rng.Next(maze.Width),rng.Next(maze.Height)
+    let randomCell () = 
+        rng.Next(maze.Width),rng.Next(maze.Height)
 
     ///Restituisce la lista senza l'elemento di indice 'index' da una lista di coppie di interi
     let removeAt index (lst : (int * int) list) : (int * int) list =
@@ -112,6 +112,7 @@ let generate (maze : Maze) : Maze =
             | 2 -> 1 + snd p1
             | -2 -> -1 + snd p1
             | _ -> failwith "Error. Not supported"
+
         (x,y)
     
     ///collegamento tra il punto indicato e un vicino "a caso"
@@ -131,7 +132,7 @@ let generate (maze : Maze) : Maze =
     let rec pathextender front =
         match front with
         | [] -> ()
-        | _ ->
+        | _ -> 
             //scelta randomica di uno dei vicini e impostazione a passaggio
             let selectedIndex = rng.Next(front.Length)
             let xf,yf = front.[selectedIndex]
@@ -150,9 +151,11 @@ let generate (maze : Maze) : Maze =
         | _,0 -> getInitCell (randomCell())
         | x,y -> if x%2=0 || y%2=0 || x=maxx || y=maxy then getInitCell (randomCell()) else x,y
     
-
+    //genero punto di partenza
     let x,y = getInitCell (randomCell())
+    //imposto il punto a path
     maze.Grid.[x,y] <- Path
+    //avvio la generazione ricorsiva del labirinto
     pathextender (frontier (x,y))
     
     maze
@@ -167,21 +170,21 @@ let wait_escape (key : ConsoleKeyInfo) (screen : wronly_raster) (st : state)=
    |'q' -> st, true
    | _ -> st,false
 
-//trova la lunghezza massima delle varie stringhe
-let rec maxL (split:string[]) (i:int) :int=
-    if i>=0 then
-        let dim = split.[i].Length
-        let dim2 = maxL split (i-1)
-        if dim > dim2 then dim else dim2
-    else
-        0
-//trova larghezza e altezza del rettangolo da creare
-let findvalues (message:string) =
-    let split = message.Split ('\n')
-    (maxL split (split.Length-1) + 6,split.Length + 4)
-
 //stampa messaggio e avvia il motore in attesa di una risposta
 let message (message: String) (z:int) st =
+    //trova la lunghezza massima delle varie stringhe
+    let rec maxL (split:string[]) (i:int) :int=
+        if i>=0 then
+            let dim = split.[i].Length
+            let dim2 = maxL split (i-1)
+            if dim > dim2 then dim else dim2
+        else
+            0
+    //trova larghezza e altezza del rettangolo da creare
+    let findvalues (message:string) =
+        let split = message.Split ('\n')
+        (maxL split (split.Length-1) + 6,split.Length + 4)
+
     let (width,height) = findvalues message
     let rect= image.rectangle (width, height, pixel.filled Color.Blue, pixel.filled Color.Yellow)
     rect.draw_text(message, 3, 2, Color.Red, Color.Yellow)
@@ -404,7 +407,6 @@ let main (gm: Config.GameMod) (mW,mH) =
         pixelarray
 
 
-  
     //creazione degli sprite
     //creazione e registrazione dello sprite del labirinto
     let lab = engine.create_and_register_sprite (new image (W*2,H,(maz mazing)), 0, 0, 0)
@@ -471,7 +473,7 @@ let main (gm: Config.GameMod) (mW,mH) =
         //avvio key listener 
         engine.loop_on_key multi_update status
         
-    | _ -> 
+    | _ -> //valorizzo il killerPoint in modo casuale, lo scrivo nei log e avvio la modalità interattiva single player
         while mazing.Grid.[ killerPointx,killerPointy]<> Cell.Path do 
             //valorizzazione killer point
             killerPointx <- rng.Next (mazing.Width-1) 

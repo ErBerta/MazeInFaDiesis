@@ -99,8 +99,10 @@ let main (W,H) = //Menu' principale
     //avvio il key loop che rimane in attesa della pressione di un tasto
     maxy <- 6.
     engine.loop_on_key updateMenu st0
+    //quando esco dal loop elimino gli sprite creati
     menu.clear;
     choice.clear
+    //se la scleta del primo menu è stata diversa da Exit allora mostro il secondo menu all'utente
     if gameMod <> Config.GameMod.Exit then
         let menu = engine.create_and_register_sprite (image.rectangle (W, H/2, pixel.filled Color.Blue, pixel.filled Color.Yellow),0,0,1)
         //richiesta risoluzione
