@@ -170,8 +170,8 @@ let wait_escape (key : ConsoleKeyInfo) (screen : wronly_raster) (st : state)=
    |'q' -> st, true
    | _ -> st,false
 
-//stampa messaggio e avvia il motore in attesa di una risposta
-let message (message: String) (z:int) st =
+//trova larghezza e altezza del rettangolo da creare
+let findvalues (message:string) =
     //trova la lunghezza massima delle varie stringhe
     let rec maxL (split:string[]) (i:int) :int=
         if i>=0 then
@@ -180,15 +180,15 @@ let message (message: String) (z:int) st =
             if dim > dim2 then dim else dim2
         else
             0
-    //trova larghezza e altezza del rettangolo da creare
-    let findvalues (message:string) =
-        let split = message.Split ('\n')
-        (maxL split (split.Length-1) + 6,split.Length + 4)
+    let split = message.Split ('\n')
+    (maxL split (split.Length-1),split.Length)
 
+//stampa messaggio e avvia il motore in attesa di una risposta
+let message (message: String) (z:int) st =
     let (width,height) = findvalues message
-    let rect= image.rectangle (width, height, pixel.filled Color.Blue, pixel.filled Color.Yellow)
+    let rect= image.rectangle (width+6, height + 4, pixel.filled Color.Blue, pixel.filled Color.Yellow)
     rect.draw_text(message, 3, 2, Color.Red, Color.Yellow)
-    ignore <| engine.create_and_register_sprite (rect, W-(width/2), H/2-(height/2), z)
+    ignore <| engine.create_and_register_sprite (rect, W-((width+6)/2), H/2-((height + 4)/2), z)
     engine.loop_on_key wait_escape st
   
 
@@ -270,29 +270,32 @@ let AutoResolver st screen =
 
     ///funzione ricorsiva per la ricerca del percorso, salva le celle in cui è passata in un array di supporto
     let rec research (st:state) (screen: wronly_raster) (dx,dy) =
-        let wait = 10
+        let wait = 500
         
         if not stop then
             //controllo la possibilità di spostarmi a destra e di non esserci gia andato
             let dxr, dyr = trymove st Direction.RIGHT
             if (dxr,dyr)<>(0.,0.) && (mazing.Visited.[(int st.player.x + int dxr)/2,int st.player.y + int dyr] <> Visited) then
+                //imposto un tempo di attesa per migliorare la visualizzazione dell'utente
                 Thread.Sleep(wait)
+                //aggiorno la matrice 
                 mazing.Visited.[int st.player.x/2,int st.player.y] <- Visited
+                //muovo lo sprite
                 let reto, fao = move st Direction.RIGHT screen
+                //errore
                 if not(fao) then
                     failwith "Error, automatic resolution failed"
                 Log.msg  "Right (%A, %A)" (st.player.x/2.) (st.player.y)
                 if not reto then
                     research st screen (dxr,dyr)
                 else
-                    stop <- true
+                    stop <- true    //caso uscita
 
         if not stop then
             //controllo la possibilità di spostarmi in giù e di non esserci gia andato
             let dxd, dyd = trymove st Direction.DOWN 
             if (dxd,dyd)<>(0.,0.) && (mazing.Visited.[(int st.player.x+int dxd)/2,int st.player.y+ int dyd] <> Visited) then
                 Thread.Sleep(wait)
-                //aggiorno la matrice 
                 mazing.Visited.[int st.player.x/2,int st.player.y] <- Visited
                 let reto, fao = move st Direction.DOWN screen
                 if not(fao) then
@@ -385,7 +388,7 @@ let multi_update (key : ConsoleKeyInfo) (screen : wronly_raster) (st:state_multi
 let main (gm: Config.GameMod) (mW,mH) =
     W <- mW
     H <- mH
-    engine <- new engine (2*W, H)
+    engine <- new engine (2*W, H+4)
     mazing <- generate(initMaze W H)
 
     ///convertirore della griglia del labirinto generato nell'array di pixel per l'engine, raddoppiando le pareti in orizzontale
@@ -407,12 +410,9 @@ let main (gm: Config.GameMod) (mW,mH) =
             )
         pixelarray
 
-
     //creazione degli sprite
     //creazione e registrazione dello sprite del labirinto
     let lab = engine.create_and_register_sprite (new image (W*2,H,(maz mazing)), 0, 0, 0)
-    //creazione e registrazione panel per mostrare le info
-    let infoPanel = engine.create_and_register_sprite (image.rectangle (W*2, 1, pixel.filled Color.White, pixel.filled Color.White),0,0,4)
     //definizione dei tipi di pixel per il giocatore e dell'arrivo
     let pixPlayer = pixel.create(Config.wall_pixel_char, Color.Blue)
     let pixEnd = pixel.create(Config.wall_pixel_char, Color.Yellow)
@@ -437,21 +437,28 @@ let main (gm: Config.GameMod) (mW,mH) =
     match gm with
     | Config.GameMod.Auto ->
         //definizione e stampa delle istruzioni di gioco per la modalità automatica
-        let instruction = "Press 's' to start the automatic resolver, 'q' to quit"
+        let instruction = "Press_'s'_to_start_resolver.\nPress_'q'_to_quit"
+        let (w,h) = findvalues instruction
+        //creazione e registrazione panel per mostrare le info
+        let infoPanel = engine.create_and_register_sprite (image.rectangle (W*2, h+1, pixel.filled Color.White, pixel.filled Color.White),0,H,4)
         infoPanel.draw_text (instruction, 2, 0, Color.Red, Color.White)
         //avvio key listener 
         engine.loop_on_key auto_start st0 
-        (*let instruction = "Press any key to exit..."
-        infoPanel.draw_text (instruction, 2, 0, Color.Red, Color.White)*)
     | Config.GameMod.OnePlayer ->
         //definizione e stampa delle istruzioni di gioco per la modalità singolo giocatore
-        let instruction = "Use W^ A< Sv D> to move your player. Press 'q' to exit."
+        let instruction = "Use_W^_A<_Sv_D>_to_move.\nPress_'q'_to_exit."
+        let (w,h) = findvalues instruction
+        //creazione e registrazione panel per mostrare le info
+        let infoPanel = engine.create_and_register_sprite (image.rectangle (W*2, h+1, pixel.filled Color.White, pixel.filled Color.White),0,H,4)
         infoPanel.draw_text (instruction, 2, 0, Color.Red, Color.White)
         //avvio key listener 
         engine.loop_on_key my_update st0
     | Config.GameMod.MultiPlayer -> 
         //definizione e stampa delle istruzioni di gioco per la modalità multi giocatore
-        let instruction = "Use W^ A< Sv D> to move player 1. Use I^ J< Kv L>  to move player 2. Press 'q' to exit."
+        let instruction = "Use_W^_A<_Sv_D>_to_move_p1.\nUse_I^_J<_Kv_L>_to_move_p2.\nPress_'q'_to_exit."
+        let (w,h) = findvalues instruction
+        //creazione e registrazione panel per mostrare le info
+        let infoPanel = engine.create_and_register_sprite (image.rectangle (W*2, h+1, pixel.filled Color.White, pixel.filled Color.White),0,H,4)
         infoPanel.draw_text (instruction, 2, 0, Color.Red, Color.White)
 
         //definizione del secondo player, del suo arrivo e del suo stato
@@ -482,7 +489,10 @@ let main (gm: Config.GameMod) (mW,mH) =
         Log.msg "Killer point on (X: %A, Y: %A)" killerPointx killerPointy
 
         //definizione e stampa delle istruzioni di gioco per la modalità giocatore singolo con easter egg
-        let instruction = "Use W^ A< Sv D> to move your player. Press 'q' to exit."
+        let instruction = "Use_W^_A<_Sv_D>_to_move_your_player.\nPress_'q'_to_exit."
+        let (w,h) = findvalues instruction
+        //creazione e registrazione panel per mostrare le info
+        let infoPanel = engine.create_and_register_sprite (image.rectangle (W*2, h+1, pixel.filled Color.White, pixel.filled Color.White),0,H,4)
         infoPanel.draw_text (instruction, 2, 0, Color.Red, Color.White)
         //avvio key listener 
         engine.loop_on_key my_update st0
