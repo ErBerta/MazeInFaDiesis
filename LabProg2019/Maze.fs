@@ -270,7 +270,7 @@ let AutoResolver st screen =
 
     ///funzione ricorsiva per la ricerca del percorso, salva le celle in cui è passata in un array di supporto
     let rec research (st:state) (screen: wronly_raster) (dx,dy) =
-        let wait = 500
+        let wait = 10
         
         if not stop then
             //controllo la possibilità di spostarmi a destra e di non esserci gia andato
