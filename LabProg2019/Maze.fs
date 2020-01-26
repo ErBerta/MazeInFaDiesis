@@ -225,7 +225,7 @@ let my_update (key : ConsoleKeyInfo) (screen : wronly_raster) (st : state) =
         st, true
     //controllo se è arrivato
     else if st.player.x = st.finish.x && st.player.y = st.finish.y then 
-        message "End" 5 st
+        message "Game_Over" 5 st
         st, true
     else
         st, key.KeyChar = 'q'
@@ -270,22 +270,7 @@ let AutoResolver st screen =
 
     ///funzione ricorsiva per la ricerca del percorso, salva le celle in cui è passata in un array di supporto
     let rec research (st:state) (screen: wronly_raster) (dx,dy) =
-        let wait = 25
-        if not stop then
-            //controllo la possibilità di spostarmi in giù e di non esserci gia andato
-            let dxd, dyd = trymove st Direction.DOWN 
-            if (dxd,dyd)<>(0.,0.) && (mazing.Visited.[(int st.player.x+int dxd)/2,int st.player.y+ int dyd] <> Visited) then
-                Thread.Sleep(wait)
-                //aggiorno la matrice 
-                mazing.Visited.[int st.player.x/2,int st.player.y] <- Visited
-                let reto, fao = move st Direction.DOWN screen
-                if not(fao) then
-                    failwith "Error, automatic resolution failed"
-                Log.msg  "Down (%A, %A)" (st.player.x/2.) (st.player.y)
-                if not reto then
-                    research st screen (dxd,dyd)
-                else
-                    stop <- true
+        let wait = 10
         
         if not stop then
             //controllo la possibilità di spostarmi a destra e di non esserci gia andato
@@ -299,6 +284,22 @@ let AutoResolver st screen =
                 Log.msg  "Right (%A, %A)" (st.player.x/2.) (st.player.y)
                 if not reto then
                     research st screen (dxr,dyr)
+                else
+                    stop <- true
+
+        if not stop then
+            //controllo la possibilità di spostarmi in giù e di non esserci gia andato
+            let dxd, dyd = trymove st Direction.DOWN 
+            if (dxd,dyd)<>(0.,0.) && (mazing.Visited.[(int st.player.x+int dxd)/2,int st.player.y+ int dyd] <> Visited) then
+                Thread.Sleep(wait)
+                //aggiorno la matrice 
+                mazing.Visited.[int st.player.x/2,int st.player.y] <- Visited
+                let reto, fao = move st Direction.DOWN screen
+                if not(fao) then
+                    failwith "Error, automatic resolution failed"
+                Log.msg  "Down (%A, %A)" (st.player.x/2.) (st.player.y)
+                if not reto then
+                    research st screen (dxd,dyd)
                 else
                     stop <- true
 
