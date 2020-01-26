@@ -167,7 +167,7 @@ let mutable mazing = generate(initMaze W H)
 //attende il tasto d'uscita
 let wait_escape (key : ConsoleKeyInfo) (screen : wronly_raster) (st : state)=
    match key.KeyChar with 
-   |'q' -> st, true
+   |'q' | 'Q' -> st, true
    | _ -> st,false
 
 //trova larghezza e altezza del rettangolo da creare
@@ -228,7 +228,7 @@ let my_update (key : ConsoleKeyInfo) (screen : wronly_raster) (st : state) =
         message "Game_Over" 5 st
         st, true
     else
-        st, key.KeyChar = 'q'
+        st,(key.KeyChar = 'q' || key.KeyChar = 'Q')
 
 
 
